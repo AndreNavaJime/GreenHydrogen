@@ -9,4 +9,6 @@ streamlit
 geopandas
 pyarrow
 joblib
+lightgbm
+catboost
 
