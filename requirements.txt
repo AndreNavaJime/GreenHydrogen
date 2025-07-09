@@ -11,4 +11,4 @@ pyarrow
 joblib
 lightgbm
 catboost
-
+fpdf
