@@ -6,3 +6,6 @@ matplotlib
 seaborn
 plotly
 streamlit
+geopandas
+pyarrow
+
