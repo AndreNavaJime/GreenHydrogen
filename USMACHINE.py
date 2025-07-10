@@ -214,29 +214,48 @@ with tabs[4]:
     df_out["Error"] = df_out["True"] - df_out["Predicted"]
 
 with tabs[5]:
-    st.subheader("State-wise LCOH Summary")
+    st.subheader("📊 State-wise LCOH Summary (Simulated Variations)")
 
-    # Compute stats
+    variations = []
+    cap_values = [cap * f for f in [0.9, 0.95, 1.0, 1.05, 1.1]]
+    eff_values = [eff * f for f in [0.95, 0.975, 1.0, 1.025, 1.05]]
+
+    for st_name in sorted(df.State.unique()):
+        try:
+            cf_val = float(df.query("State==@st_name & Year==@year & Tech==@tech").CF.iloc[0])
+        except IndexError:
+            continue
+        for c, e in zip(cap_values, eff_values):
+            row = {
+                "Year": year,
+                "CF": cf_val,
+                "CAPEX_$/kW": c,
+                "Efficiency_kWh_kg": e,
+                "Electricity_$/kWh": elec,
+                "Water_$kg": df["Water_$kg"].median(),
+                "CO2_$kg": df["CO2_$kg"].median(),
+                "Transport_$kg": df["Transport_$kg"].median(),
+                "Storage_$kg": df["Storage_$kg"].median(),
+                "Tech_PEM": int(tech == "PEM"),
+                "Tech_SOEC": int(tech == "SOEC"),
+                "State": st_name
+            }
+            variations.append(row)
+
+    df_var = pd.DataFrame(variations)
+    df_pred = df_var.drop(columns=["State"])
+    df_var["LCOH ($/kg)"] = best.predict(df_pred)
+
     summary_stats = (
-        df_inputs.groupby("State")["LCOH ($/kg)"]
+        df_var.groupby("State")["LCOH ($/kg)"]
         .agg(["mean", "min", "max", "std"])
-        .fillna(0)
-        .round(3)
+        .round(2)
     )
 
-    # Drop std column if all zeros
     if summary_stats["std"].eq(0).all():
         summary_stats.drop(columns="std", inplace=True)
 
-    # Display with gradient
-    if not summary_stats.isna().values.all():
-        try:
-            st.dataframe(summary_stats.style.background_gradient(cmap="viridis"))
-        except Exception as e:
-            st.warning(f"Could not apply gradient styling: {e}")
-            st.dataframe(summary_stats)
-    else:
-        st.warning("State comparison summary contains only NaN values.")
+    st.dataframe(summary_stats.style.background_gradient(cmap="viridis"), use_container_width=True)
 
 
     # CSV download
