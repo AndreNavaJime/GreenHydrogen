@@ -13,3 +13,7 @@ lightgbm
 catboost
 fpdf
 openpyxl
+numpy==1.26.4
+shap==0.45.0
+  
+
