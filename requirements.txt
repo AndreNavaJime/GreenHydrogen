@@ -19,6 +19,9 @@ openpyxl
 shap==0.45.0
 # other
 ipython              # optional, for shap.initjs()
+PyPDF2>=3.0
+
 
   
+
 
