@@ -1,12 +1,10 @@
-# core
-numpy==1.26.4        # <— pin below 2.0
+numpy==1.26.4
 pandas
 scikit-learn
 xgboost
 lightgbm
 catboost
 joblib
-# viz / app
 matplotlib
 seaborn
 streamlit
@@ -14,19 +12,17 @@ geopandas
 pyarrow
 fpdf
 openpyxl
-# explainability
 shap==0.45.0
-# other
-ipython              # optional, for shap.initjs()
+ipython
 PyPDF2>=3.0
 plotly>=5.19
-kaleido>=0.2.1
-python_version<"3.13"
+kaleido>=1.0.0       
 
 
 
 
   
+
 
 
 
