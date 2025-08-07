@@ -15,8 +15,7 @@ openpyxl
 shap==0.45.0
 ipython
 PyPDF2>=3.0
-plotly>=5.19
-kaleido>=1.0.0      
+plotly>=5.19  
 # requires-python>=3.12,<3.13
 
 
@@ -24,6 +23,7 @@ kaleido>=1.0.0
 
 
   
+
 
 
 
