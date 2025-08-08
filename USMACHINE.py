@@ -866,8 +866,9 @@ with tabs[3]:
             title_text="",
         )
         fig.update_coloraxes(
-            colorbar_tickcolor="black",
-            colorbar_title_font_color="black",
+            colorbar_tickcolor="black",              # tick labels on colorbar
+            colorbar_title_font_color="black",       # title text
+            colorbar_tickfont=dict(color="black"),   # <-- ensures visibility
         )
         fig.update_geos(
             bgcolor="white",      # page/canvas behind the map
@@ -900,7 +901,7 @@ with tabs[3]:
                 showlegend=False,
             )
             .update_layout(
-                geo=dict(scope="usa", visible=False),  # hides base outline here
+                geo=dict(scope="usa", visible=False),
                 margin=dict(l=0, r=0, t=0, b=0),
             )
         )
@@ -920,7 +921,7 @@ with tabs[3]:
                     preds48.rename("LCOH ($/kg)"),
                     left_on="State", right_index=True, how="left",
                 )
-                .dropna(subset=["LCOH ($/kg)"])     # drop any no-data shapes
+                .dropna(subset=["LCOH ($/kg)"])
             )
 
             fig_ml = (
@@ -940,11 +941,11 @@ with tabs[3]:
                                   "<br>LCOH: %{z:.2f} $/kg<extra></extra>",
                 )
                 .update_layout(
-                    geo=dict(scope="usa"),  # base is shown here
+                    geo=dict(scope="usa"),
                     margin=dict(l=0, r=0, t=0, b=0),
                 )
             )
-            _white(fig_ml)  # ← turns land/lakes/ocean white (no black AK/HI/lakes)
+            _white(fig_ml)
             st.plotly_chart(fig_ml, use_container_width=True, config=_cfg)
 
     # ───────────────────────── BASELINE-TEA VIEW ─────────────────────────
@@ -992,7 +993,7 @@ with tabs[3]:
                     )
                 )
                 fig_te.update_coloraxes(colorbar_tickformat=".2f")
-                _white(fig_te)   # ← whiten base map water/land too
+                _white(fig_te)
                 st.plotly_chart(fig_te, use_container_width=True, config=_cfg)
 
         except FileNotFoundError:
