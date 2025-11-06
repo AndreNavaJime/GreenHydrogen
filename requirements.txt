@@ -1,28 +1,44 @@
+# Core
 numpy==1.26.4
-pandas
-scikit-learn
-xgboost
-lightgbm
-catboost
-joblib
+pandas>=2.0
+scikit-learn>=1.4
+
+# Tree models (optional but used by your code)
+xgboost>=2.0
+lightgbm>=4.0
+catboost>=1.2
+
+# Viz / app
 matplotlib
 seaborn
-streamlit
-geopandas
+plotly>=5.19
+streamlit>=1.36
+
+# Geo stack (pip wheels exist, but on Windows conda is often easier)
+geopandas>=0.14
+shapely>=2.0
+pyproj>=3.6
+fiona>=1.9
+rtree>=1.2
+
+# IO / utils
 pyarrow
-fpdf
 openpyxl
-shap==0.45.0
+joblib
 ipython
+fpdf
 PyPDF2>=3.0
-plotly>=5.19  
-# requires-python>=3.12,<3.13
+shap==0.45.0
+
+
+
 
 
 
 
 
   
+
 
 
 
