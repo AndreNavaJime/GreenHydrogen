@@ -279,17 +279,21 @@ def load_data():
 def train_models(
     df: pd.DataFrame,
     *,
-    learners=("OLS", "Ridge", "RandomForest", "GBRegressor", "XGBoost", "LightGBM", "CatBoost"),
+    learners=("OLS","Ridge","RandomForest","GBRegressor","XGBoost","LightGBM","CatBoost"),
     groups_col: str = "State",
     oof_folds: int = 5,
-    do_holdout: bool = True,          # 80/20 random hold-out metrics
+    do_holdout: bool = True,
     random_state: int = 42,
-    show_title: bool = False,         # ← default: NO UI
-    verbose_debug: bool = False,      # ← default: quiet
+    show_title: bool = False,          # ← no UI title by default
+    verbose_debug: bool = False,
 ):
     """
-    TRAIN MODELS (internal) — returns (results_dict, X_float64).
-    No UI emitted. Targets are clipped to >= 0 to avoid negative LCOH.
+    TRAIN MODELS  (code anchor only; no UI title)
+    • Fits models with target transform: y_log = log1p(y)  => guarantees ŷ ≥ 0 after inverse (expm1).
+    • Reports OOF metrics on the original $/kg scale.
+    • Optional 80/20 hold-out.
+    • GroupKFold if groups_col exists.
+    Returns (results_dict, X_float64).
     """
     import time, numpy as np, pandas as pd, shap
     from sklearn.model_selection import KFold, GroupKFold, train_test_split
@@ -297,10 +301,11 @@ def train_models(
     from sklearn.base import clone
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
+    from sklearn.compose import TransformedTargetRegressor as TTR
     from sklearn.linear_model import LinearRegression, Ridge
     from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 
-    # Optional libs (guarded)
+    # optional libs
     try:
         from xgboost import XGBRegressor; _HAS_XGB = True
     except Exception:
@@ -314,89 +319,74 @@ def train_models(
     except Exception:
         _HAS_CAT = False
 
-    # ---------- numeric cleaner ----------
+    # ---------- cleaner ----------
     def _clean_numeric_df(Xin: pd.DataFrame) -> pd.DataFrame:
-        if Xin.empty:
-            return Xin.copy()
-        S = Xin.astype(str)
-        S = (S.replace(r"\[", "", regex=True)
-               .replace(r"\]", "", regex=True)
-               .replace(",", "", regex=False)
-               .apply(lambda s: s.str.strip()))
+        if Xin.empty: return Xin.copy()
+        S = Xin.astype(str).replace(r"\[|\]", "", regex=True).apply(lambda s: s.str.strip())
         Xnum = S.apply(pd.to_numeric, errors="coerce").replace([np.inf, -np.inf], np.nan)
         all_nan = [c for c in Xnum.columns if Xnum[c].isna().all()]
-        if all_nan:
-            Xnum = Xnum.drop(columns=all_nan)
-        if Xnum.shape[1]:
-            Xnum = Xnum.fillna(Xnum.median(numeric_only=True)).fillna(0.0)
+        if all_nan: Xnum = Xnum.drop(columns=all_nan)
+        if Xnum.shape[1]: Xnum = Xnum.fillna(Xnum.median(numeric_only=True)).fillna(0.0)
         return Xnum.astype("float64")
 
-    # ---------- build features/target ----------
+    # ---------- features/target ----------
     df_p = df.copy()
-    if "Year" in df_p.columns:
-        df_p["Year_val"] = df_p["Year"]
-
-    drop_cols = [c for c in ["State", "LCOH_$kg", "Year"] if c in df_p.columns]
-    X = pd.get_dummies(
-        df_p.drop(columns=drop_cols),
-        columns=[c for c in ["Tech"] if c in df_p.columns],
-        drop_first=True
-    )
+    if "Year" in df_p.columns: df_p["Year_val"] = df_p["Year"]
+    drop_cols = [c for c in ["State","LCOH_$kg","Year"] if c in df_p.columns]
+    X = pd.get_dummies(df_p.drop(columns=drop_cols),
+                       columns=[c for c in ["Tech"] if c in df_p.columns],
+                       drop_first=True)
     if "Year_val" in df_p.columns:
-        X["Year_val_squared"] = df_p["Year_val"] ** 2
+        X["Year_val_squared"] = df_p["Year_val"]**2
 
     if "LCOH_$kg" not in df_p.columns:
-        st.sidebar.error("Missing target column 'LCOH_$kg'.")
-        return {}, None
+        st.sidebar.error("Missing target column 'LCOH_$kg'."); return {}, None
 
     y = pd.to_numeric(df_p["LCOH_$kg"], errors="coerce")
-    y = y.replace([np.inf, -np.inf], np.nan)            # sanity
-    y = y.fillna(0.0).clip(lower=0.0)                   # ← never negative
-
     X = _clean_numeric_df(X)
     mask = np.isfinite(y)
     X, y = X.loc[mask], y.loc[mask]
-
     groups = None
     if (groups_col in df_p.columns) and (groups_col not in drop_cols):
         groups = df_p.loc[mask, groups_col].astype(str).fillna("UNK")
 
     if len(X) < 5 or X.shape[1] == 0:
-        st.sidebar.warning("Too few rows or zero features – ML disabled.")
-        return {}, None
+        st.sidebar.warning("Too few rows or zero features – ML disabled."); return {}, None
 
-    # ---------- model zoo ----------
+    # ---------- model zoo (TTR ensures ŷ ≥ 0) ----------
+    def _ttr(reg):
+        return TTR(regressor=reg, func=np.log1p, inverse_func=np.expm1)
+
     all_defs = {
-        "OLS":   Pipeline([("scaler", StandardScaler()), ("est", LinearRegression())]),
-        "Ridge": Pipeline([("scaler", StandardScaler()), ("est", Ridge(alpha=1.0, random_state=random_state))]),
-        "RandomForest": Pipeline([("est", RandomForestRegressor(
+        "OLS":   Pipeline([("scaler", StandardScaler()), ("ttr", _ttr(LinearRegression()))]),
+        "Ridge": Pipeline([("scaler", StandardScaler()), ("ttr", _ttr(Ridge(alpha=1.0, random_state=random_state)))]),
+        "RandomForest": Pipeline([("ttr", _ttr(RandomForestRegressor(
             n_estimators=300, max_depth=12, min_samples_split=10, min_samples_leaf=5,
             max_features="sqrt", n_jobs=-1, random_state=random_state
-        ))]),
-        "GBRegressor": Pipeline([("est", GradientBoostingRegressor(
+        )))]),
+        "GBRegressor": Pipeline([("ttr", _ttr(GradientBoostingRegressor(
             n_estimators=300, max_depth=3, learning_rate=0.05, subsample=0.8, random_state=random_state
-        ))]),
+        )))]),
     }
     if _HAS_XGB:
-        all_defs["XGBoost"] = Pipeline([("est", XGBRegressor(
+        all_defs["XGBoost"] = Pipeline([("ttr", _ttr(XGBRegressor(
             n_estimators=100, max_depth=6, learning_rate=0.05, subsample=0.8,
-            colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=0.0,
-            n_jobs=-1, verbosity=0, random_state=random_state
-        ))])
+            colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=0.0, n_jobs=-1, verbosity=0,
+            random_state=random_state
+        )))])
     if _HAS_LGBM:
-        all_defs["LightGBM"] = Pipeline([("est", LGBMRegressor(
+        all_defs["LightGBM"] = Pipeline([("ttr", _ttr(LGBMRegressor(
             n_estimators=400, max_depth=8, num_leaves=31, learning_rate=0.05,
             subsample=0.8, colsample_bytree=0.8, random_state=random_state
-        ))])
+        )))])
     if _HAS_CAT:
-        all_defs["CatBoost"] = Pipeline([("est", CatBoostRegressor(
+        all_defs["CatBoost"] = Pipeline([("ttr", _ttr(CatBoostRegressor(
             iterations=500, depth=8, learning_rate=0.05, l2_leaf_reg=3.0,
             subsample=0.8, rsm=0.8, verbose=0, random_state=random_state
-        ))])
-
+        )))])
     models = {k: v for k, v in all_defs.items() if k in learners}
 
-    # ---------- CV splitter ----------
+    # ---------- CV ----------
     if (groups is not None) and (len(set(groups)) > 1):
         splitter = GroupKFold(n_splits=max(2, min(oof_folds, len(set(groups)))))
         splits = list(splitter.split(X, y, groups=groups))
@@ -405,65 +395,63 @@ def train_models(
         splits = list(splitter.split(X, y))
 
     # ---------- fit & evaluate ----------
-    results = {}
-    t0 = time.time()
-
+    results, t0 = {}, time.time()
     for name, proto in models.items():
         y_pred_oof = np.zeros(len(X), dtype=float)
         y_true_oof = y.to_numpy(dtype=float, copy=False)
 
         for tr_idx, va_idx in splits:
-            est = clone(proto)
-            est.fit(X.iloc[tr_idx], y.iloc[tr_idx])
-            y_hat = est.predict(X.iloc[va_idx])
-            y_pred_oof[va_idx] = np.clip(y_hat, 0.0, np.inf)   # ← no negative OOF
+            est = clone(proto).fit(X.iloc[tr_idx], y.iloc[tr_idx])
+            # back on original scale & clip to ≥ 0 for safety
+            y_hat = np.asarray(est.predict(X.iloc[va_idx]), dtype=float)
+            y_pred_oof[va_idx] = np.clip(y_hat, 0.0, None)
 
         r2_oof   = float(r2_score(y_true_oof, y_pred_oof))
         rmse_oof = float(np.sqrt(mean_squared_error(y_true_oof, y_pred_oof)))
         mae_oof  = float(mean_absolute_error(y_true_oof, y_pred_oof))
 
-        # Optional 80/20
         holdout = {}
         if do_holdout:
             X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.2, random_state=random_state)
             est_h = clone(proto).fit(X_tr, y_tr)
-            y_hat = np.clip(est_h.predict(X_te), 0.0, np.inf)  # ← no negative hold-out
+            y_hat = np.clip(np.asarray(est_h.predict(X_te), dtype=float), 0.0, None)
             holdout = {
                 "holdout_r2":   float(r2_score(y_te, y_hat)),
                 "holdout_rmse": float(np.sqrt(mean_squared_error(y_te, y_hat))),
                 "holdout_mae":  float(mean_absolute_error(y_te, y_hat)),
                 "y_true_holdout": y_te.to_numpy(dtype=float, copy=False).tolist(),
-                "y_pred_holdout": np.asarray(y_hat, dtype=float).tolist(),
+                "y_pred_holdout": y_hat.tolist(),
             }
 
-        inference_model = clone(proto).fit(X, y)  # final model
-        # (no SHAP changes; safe best-effort)
+        # fully-fitted model
+        inference_model = clone(proto).fit(X, y)
+
+        # SHAP (best-effort): unwrap to the inner regressor if present
         explainer, shap_vals = None, None
         try:
             bg_np = X.to_numpy(dtype=np.float64, copy=False)[: min(200, len(X))]
-            raw_est = inference_model.steps[-1][1] if hasattr(inference_model, "steps") else inference_model
+            final_step = inference_model[-1] if hasattr(inference_model, "__getitem__") else inference_model
+            ttr_obj = getattr(final_step, "named_steps", {}).get("ttr", final_step)
+            raw_est = getattr(ttr_obj, "regressor_", None) or getattr(ttr_obj, "regressor", ttr_obj)
             try:
                 explainer = shap.TreeExplainer(raw_est); shap_raw = explainer.shap_values(bg_np)
             except Exception:
                 explainer = shap.Explainer(raw_est, bg_np); shap_raw = explainer(bg_np).values
-            shap_vals = np.asarray(shap_raw[0], dtype=np.float64) if isinstance(shap_raw, list) else np.asarray(shap_raw, dtype=np.float64)
+            shap_vals = shap_raw[0] if isinstance(shap_raw, list) else shap_raw
         except Exception:
             explainer, shap_vals = None, None
 
         results[name] = {
             "model_prototype": proto,
-            "inference_model": inference_model,
-            "model": inference_model,                 # legacy alias
+            "inference_model": inference_model,  # also saved as "model" for legacy code paths
+            "model": inference_model,
             "features": X.columns.tolist(),
             "oof_r2": r2_oof, "oof_rmse": rmse_oof, "oof_mae": mae_oof,
-            "y_true_oof": y_true_oof.tolist(),
-            "y_pred_oof": y_pred_oof.tolist(),
-            **holdout,
-            "explainer": explainer,
-            "shap_values": shap_vals,
+            "y_true_oof": y_true_oof.tolist(), "y_pred_oof": y_pred_oof.tolist(),
+            **holdout, "explainer": explainer, "shap_values": shap_vals,
         }
 
-    st.sidebar.success(f"✅ Trained {len(results)} models in {time.time() - t0:.1f}s")
+    st.sidebar.success(f"✅ Trained {len(results)} models in {time.time()-t0:.1f}s")
     return results, X.astype("float64")
 
 
@@ -889,21 +877,78 @@ def set_active_tab(idx):
 with tabs[0]:
 
     st.markdown("## Scenario Prediction")
-    st.metric("Predicted LCOH", f"${pred:.2f}/kg")
 
-    # ── Show inputs ───────────────────────────────────────────────────────
+    # --- clamp & guard the already-computed `pred` -----------------------
+    try:
+        pred_val = float(pred)
+    except Exception:
+        pred_val = np.nan
+
+    if not np.isfinite(pred_val):
+        st.error("Prediction is unavailable (NaN/Inf). Check inputs or switch model.")
+        pred_val = 0.0  # keep UI stable
+
+    # hard floor at zero (prevents negatives from any ML path)
+    pred_val = max(0.0, pred_val)
+
+    st.metric("Predicted LCOH", f"${pred_val:.2f}/kg")
+
+    # ── Inputs used (compact) ────────────────────────────────────────────
     with st.expander("Inputs Used", expanded=False):
         st.write({
             "Mode": calculation_mode,
             "Technology": tech,
-            "Year": year,
+            "Year": int(year),
             "State": state,
-            "CAPEX ($/kW)": cap_dynamic,
-            "Efficiency (kWh/kg)": eff_dynamic,
-            "Electricity Price ($/kWh)": elec,
-            "Capacity Factor": row["CF"],
+            "CAPEX ($/kW)": float(cap_dynamic),
+            "Efficiency (kWh/kg)": float(eff_dynamic),
+            "Electricity Price ($/kWh)": float(elec),
+            "Capacity Factor": float(row.get("CF", 0.0)),
         })
 
+    # ── Optional: deterministic breakdown only in Baseline TEA mode ─────
+    if calculation_mode == "Baseline TEA":
+        try:
+            disc = 0.08
+            N = 20
+            crf = disc * (1 + disc) ** N / ((1 + disc) ** N - 1)
+
+            cf = float(row.get("CF", 0.0))
+            eff = max(1e-9, float(eff_dynamic))             # guard zero/neg
+            kgH2 = cf * 8760.0 / eff
+
+            cap = float(cap_dynamic)
+            elec_p = float(elec)
+            wc  = float(row.get("Water_$kg", 0.0))
+            cs  = float(row.get("CO2_$kg", 0.0))
+            tc  = float(row.get("Transport_$kg", 0.0))
+            sc  = float(row.get("Storage_$kg", 0.0))
+
+            if kgH2 <= 0 or not np.isfinite(kgH2):
+                st.warning("Capacity factor / efficiency led to zero production; breakdown skipped.")
+            else:
+                capex_term = cap * crf / kgH2
+                om_term    = cap * 0.05 * (cap / cap_ref) / kgH2
+                elec_term  = elec_p * eff
+
+                breakdown = {
+                    "CAPEX term ($/kg)":        round(capex_term, 4),
+                    "O&M scaling term ($/kg)":  round(om_term, 4),
+                    "Electricity term ($/kg)":  round(elec_term, 4),
+                    "Water ($/kg)":             round(wc, 4),
+                    "CO₂ ($/kg)":               round(cs, 4),
+                    "Transport ($/kg)":         round(tc, 4),
+                    "Storage ($/kg)":           round(sc, 4),
+                }
+                # sum with safety floor (matches the metric value policy)
+                lcoh_sum = sum(breakdown.values())
+                lcoh_sum = max(0.0, float(lcoh_sum))
+
+                st.markdown("**Cost Breakdown (Baseline TEA)**")
+                st.write(breakdown)
+                st.caption(f"Sum = ${lcoh_sum:.2f}/kg (clamped ≥ 0)")
+        except Exception as e:
+            st.warning(f"Could not compute TEA breakdown ({e}).")
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -1336,6 +1381,9 @@ with tabs[3]:
 
 
 
+# ─────────────────────────────────────────────────────────────────────────
+# TAB 4 – State-wise LCOH Summary (Simulated Variations)
+# ─────────────────────────────────────────────────────────────────────────
 with tabs[4]:
     st.subheader("State-wise LCOH Summary (Simulated Variations)")
 
@@ -1343,7 +1391,7 @@ with tabs[4]:
 
     variations = []
 
-    # vary CAPEX and efficiency independently (25 combos)
+    # 25 independent variations around current sliders
     cap_values = np.array([cap_dynamic * f for f in [0.90, 0.95, 1.00, 1.05, 1.10]], dtype=float)
     eff_values = np.array([eff_dynamic * f for f in [0.95, 0.975, 1.00, 1.025, 1.05]], dtype=float)
 
@@ -1351,11 +1399,12 @@ with tabs[4]:
     features = []
     _best = None
     if ml_mode and isinstance(results, dict) and len(results) > 0:
-        # default to first model if model_name missing
         if (model_name is None) or (model_name not in results):
             model_name = next(iter(results.keys()))
-        features = results[model_name].get("features", [])
-        _best = results[model_name].get("model", results[model_name].get("inference_model", None))
+        rslot = results[model_name]
+        # accept either key ("model" legacy or "inference_model")
+        _best = rslot.get("model", rslot.get("inference_model", None))
+        features = rslot.get("features", [])
 
     # Helpers
     def _n(x, d=np.nan):
@@ -1373,7 +1422,10 @@ with tabs[4]:
         return float(default)
 
     def _elec_fallback(subset_df):
-        """Try exact values → mean(State,Year) → session slider → global slider."""
+        """
+        Try exact values → mean(State,Year,Tech) → session slider → global slider.
+        Guarantees a finite float result.
+        """
         if "Electricity_$/kWh" in subset_df.columns:
             s = pd.to_numeric(subset_df["Electricity_$/kWh"], errors="coerce")
             if len(s) and np.isfinite(s.iloc[0]):
@@ -1409,7 +1461,7 @@ with tabs[4]:
         if not np.isfinite(cf_val) or cf_val <= 0:
             continue
 
-        for c, e in product(cap_values, eff_values):   # 25 independent variations
+        for c, e in product(cap_values, eff_values):
             e = float(e)
             if not np.isfinite(e) or e <= 0:
                 continue
@@ -1427,8 +1479,8 @@ with tabs[4]:
             }
 
             if ml_mode and _best is not None and features:
+                # add temporal + tech one-hots expected by the model
                 row_sim.update({"Year_val": year, "Year_val_squared": year ** 2})
-                # one-hot tech columns expected by the model
                 for col in features:
                     if col.startswith("Tech_"):
                         row_sim[col] = 1 if col == f"Tech_{tech}" else 0
@@ -1445,20 +1497,23 @@ with tabs[4]:
                           .astype("float64"))
                 try:
                     pred_val = float(_best.predict(df_row)[0])
-                    # clip to a sane non-negative range (adjust if you prefer)
-                    row_sim["LCOH ($/kg)"] = float(np.clip(pred_val, 0.0, 40.0))
+                    # clip to non-negative and a sane upper bound for visual stability
+                    row_sim["LCOH ($/kg)"] = float(np.clip(pred_val, 0.0, 60.0))
                 except Exception:
+                    # if the selected model can't score this row, skip gracefully
                     continue
             else:
-                # deterministic equation (no rounding during calc)
-                crf  = 0.08 * (1 + 0.08) ** 20 / ((1 + 0.08) ** 20 - 1)
+                # deterministic TEA (non-negative by construction)
+                disc = 0.08; N = 20
+                crf  = disc * (1 + disc) ** N / ((1 + disc) ** N - 1)
                 kgH2 = cf_val * 8760.0 / e
                 if not np.isfinite(kgH2) or kgH2 <= 0:
                     continue
                 capex_term = (c * crf) / kgH2
                 om_term    = (c * 0.05 * (c / cap_ref)) / kgH2
                 elec_term  = elec_val * e
-                row_sim["LCOH ($/kg)"] = capex_term + om_term + elec_term + wc + cs + tc + sc
+                val = capex_term + om_term + elec_term + wc + cs + tc + sc
+                row_sim["LCOH ($/kg)"] = max(0.0, float(val))
 
             if np.isfinite(row_sim["LCOH ($/kg)"]):
                 variations.append(row_sim)
@@ -1475,8 +1530,8 @@ with tabs[4]:
                  .round(2)
         )
 
-        # if std degenerate, recompute explicitly (keeps UI tidy)
-        if "std" in summary_stats.columns and summary_stats["std"].nunique() <= 1:
+        # If std degenerates (can happen with tiny sample sizes), recompute explicitly
+        if ("std" in summary_stats.columns) and (summary_stats["std"].nunique() <= 1):
             summary_stats["std"] = (
                 df_var.groupby("State")["LCOH ($/kg)"]
                      .apply(lambda s: s.std(ddof=1)).round(3)
@@ -1486,7 +1541,6 @@ with tabs[4]:
             summary_stats.style.format(precision=2).background_gradient(cmap="viridis"),
             use_container_width=True
         )
-
 
 
 
