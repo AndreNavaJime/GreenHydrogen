@@ -2,24 +2,25 @@
 numpy==1.26.4
 pandas>=2.0
 scikit-learn>=1.4
+scipy>=1.10
 
-# Tree models (optional but used by your code)
+# Tree models (used by the code)
 xgboost>=2.0
 lightgbm>=4.0
-catboost>=1.2
+# catboost>=1.2  # not used anymore; remove to slim deps
 
 # Viz / app
 matplotlib
-seaborn
 plotly>=5.19
 streamlit>=1.36
 
-# Geo stack (pip wheels exist, but on Windows conda is often easier)
+# Geo stack (prefer pyogrio for easy installs; keep fiona only if you need it)
 geopandas>=0.14
 shapely>=2.0
 pyproj>=3.6
-fiona>=1.9
-rtree>=1.2
+pyogrio>=0.7
+# fiona>=1.9      # optional; needs GDAL on Windows
+rtree>=1.2        # optional, but useful for spatial index speed
 
 # IO / utils
 pyarrow
@@ -36,8 +37,8 @@ shap==0.45.0
 
 
 
-
   
+
 
 
 
