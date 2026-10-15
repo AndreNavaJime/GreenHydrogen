@@ -1,31 +1,27 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Hydrogen USA">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#071D22"/>
-      <stop offset="0.58" stop-color="#12343B"/>
-      <stop offset="1" stop-color="#184955"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="52%" cy="45%" r="58%">
-      <stop offset="0" stop-color="#35D0C2" stop-opacity=".24"/>
-      <stop offset=".65" stop-color="#35D0C2" stop-opacity=".05"/>
+    <radialGradient id="glow" cx="50%" cy="47%" r="56%">
+      <stop offset="0" stop-color="#35D0C2" stop-opacity=".22"/>
+      <stop offset=".68" stop-color="#35D0C2" stop-opacity=".05"/>
       <stop offset="1" stop-color="#35D0C2" stop-opacity="0"/>
     </radialGradient>
     <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="7"/>
+      <feGaussianBlur stdDeviation="8"/>
     </filter>
   </defs>
 
-  <rect width="512" height="512" fill="url(#bg)"/>
-  <circle cx="256" cy="250" r="206" fill="url(#glow)"/>
+  <rect width="512" height="512" fill="#12343B"/>
+  <circle cx="256" cy="250" r="205" fill="url(#glow)"/>
 
-  <ellipse cx="256" cy="256" rx="178" ry="78" fill="none" stroke="#35D0C2" stroke-width="14" transform="rotate(-28 256 256)" opacity=".92"/>
-  <ellipse cx="256" cy="256" rx="178" ry="78" fill="none" stroke="#6D80E8" stroke-width="13" transform="rotate(31 256 256)" opacity=".86"/>
-  <ellipse cx="256" cy="256" rx="138" ry="188" fill="none" stroke="#E0A33B" stroke-width="7" transform="rotate(10 256 256)" opacity=".58"/>
+  <ellipse cx="256" cy="256" rx="178" ry="78" fill="none" stroke="#35D0C2" stroke-width="15" transform="rotate(-28 256 256)" opacity=".95"/>
+  <ellipse cx="256" cy="256" rx="178" ry="78" fill="none" stroke="#6D80E8" stroke-width="14" transform="rotate(31 256 256)" opacity=".88"/>
+  <ellipse cx="256" cy="256" rx="138" ry="188" fill="none" stroke="#E0A33B" stroke-width="8" transform="rotate(10 256 256)" opacity=".62"/>
 
   <circle cx="383" cy="145" r="25" fill="#E0A33B"/>
-  <circle cx="383" cy="145" r="36" fill="#E0A33B" opacity=".12" filter="url(#soft)"/>
+  <circle cx="383" cy="145" r="38" fill="#E0A33B" opacity=".11" filter="url(#soft)"/>
   <circle cx="122" cy="348" r="18" fill="#35D0C2"/>
-  <circle cx="122" cy="348" r="28" fill="#35D0C2" opacity=".13" filter="url(#soft)"/>
+  <circle cx="122" cy="348" r="30" fill="#35D0C2" opacity=".12" filter="url(#soft)"/>
 
-  <text x="256" y="277" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="800" fill="#FFF8E9">H₂</text>
+  <circle cx="256" cy="256" r="54" fill="#12343B" opacity=".94"/>
+  <text x="256" y="279" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="82" font-weight="800" fill="#FFF8E9">H₂</text>
 </svg>

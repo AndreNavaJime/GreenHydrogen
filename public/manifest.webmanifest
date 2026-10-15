@@ -1,13 +1,13 @@
 {
   "name": "Hydrogen USA — Electrolysis Cost Explorer",
   "short_name": "Hydrogen USA",
-  "description": "State-resolved plant-gate electrolysis cost screening across the 48 contiguous U.S. states.",
+  "description": "Interactive scientific research tool for state-resolved plant-gate electrolysis cost screening across the 48 contiguous U.S. states.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
-  "background_color": "#FFF8E9",
+  "background_color": "#12343B",
   "theme_color": "#12343B",
   "categories": ["education", "utilities", "productivity"],
   "icons": [

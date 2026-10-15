@@ -1,4 +1,4 @@
-const CACHE = "hydrogen-usa-v2";
+const CACHE = "hydrogen-usa-v3";
 const CORE = ["/", "/manifest.webmanifest", "/hydrogen-icon.svg"];
 
 self.addEventListener("install", (event) => {
