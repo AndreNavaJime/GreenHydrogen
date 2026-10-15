@@ -31,17 +31,19 @@ Then open `http://localhost:3000`.
 
 ## Current web-app data status
 
-The first revised web-app version is seeded with manuscript-approved summary results:
+The revised branch now contains the migrated, hash-verified canonical data release under `public/data/canonical/`:
 
-- deterministic v3 state-distribution summaries;
-- DOE 2022 installed-CAPEX envelope ranking robustness;
+- 720-row deterministic v3 state/year/technology table;
+- state technology-ordering tables;
+- DOE 2022 installed-CAPEX envelope and break-even outputs;
 - observed 2025 electricity-price sensitivity;
 - observed 2024 natural-gas-price sensitivity;
-- DOE 2024 benchmark comparison.
+- DOE 2024 benchmark comparison;
+- public provenance manifest with SHA-256 hashes and source-relative paths.
 
-The full 48-state explorer/map will be connected only after the accepted canonical v3 state and scenario files are imported. Legacy root CSVs must **not** be used as substitutes.
+The web app reads these accepted CSVs directly. It includes a full 48-state selector, technology cost decomposition, scenario comparisons, and direct CSV/manifest downloads. Legacy root CSVs are **not** used as substitutes.
 
-See `data/README.md`.
+See `data/README.md` and `public/data/canonical/README.md`.
 
 ## Historical Streamlit dashboard
 
