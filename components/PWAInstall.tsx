@@ -86,7 +86,7 @@ export default function PWAInstall() {
   return (
     <aside className="install-card" aria-live="polite">
       <button className="install-close" onClick={dismiss} aria-label="Close install prompt">×</button>
-      <div className="install-icon" aria-hidden="true">H₂</div>
+      <div className="install-mark" aria-hidden="true"><span /><i /><b /></div>
       <div className="install-copy">
         <strong>Install Hydrogen USA</strong>
         {isIOS ? (
