@@ -1801,3 +1801,172 @@ code {
     top: 8px;
   }
 }
+
+
+/* --- Scientific tool credits --- */
+.creator-credits {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 22px;
+  align-items: center;
+  margin: 16px 0 0;
+  padding: 26px 28px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 8% 40%, rgba(22,166,160,.08), transparent 18rem),
+    linear-gradient(135deg, rgba(255,253,248,.98), rgba(248,241,224,.96));
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+
+.creator-mark {
+  position: relative;
+  width: 76px;
+  height: 62px;
+  flex: 0 0 76px;
+}
+
+.creator-mark:before,
+.creator-mark:after,
+.creator-mark span,
+.creator-mark i,
+.creator-mark b {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+}
+
+.creator-mark:before,
+.creator-mark:after {
+  left: 7px;
+  top: 16px;
+  width: 61px;
+  height: 27px;
+  border: 3px solid var(--teal);
+}
+
+.creator-mark:before { transform: rotate(-27deg); }
+.creator-mark:after {
+  transform: rotate(28deg);
+  border-color: var(--cobalt);
+}
+
+.creator-mark span {
+  width: 14px;
+  height: 14px;
+  left: 31px;
+  top: 24px;
+  background: var(--petrol);
+  box-shadow: 0 0 0 5px rgba(22,166,160,.08);
+}
+
+.creator-mark i {
+  width: 9px;
+  height: 9px;
+  right: 5px;
+  top: 8px;
+  background: var(--amber);
+}
+
+.creator-mark b {
+  width: 8px;
+  height: 8px;
+  left: 4px;
+  bottom: 9px;
+  background: var(--teal);
+}
+
+.creator-copy h2 {
+  margin: 6px 0 7px;
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+}
+
+.creator-copy p {
+  max-width: 780px;
+  margin-bottom: 0;
+  color: #68736f;
+  font-size: .86rem;
+}
+
+.creator-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.creator-contact,
+.creator-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: .8rem;
+  font-weight: 850;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.creator-contact {
+  color: #f3fbf8;
+  background: var(--petrol);
+  box-shadow: 0 8px 22px rgba(18,52,59,.12);
+}
+
+.creator-source {
+  color: var(--petrol);
+  background: transparent;
+  border: 1px solid #d9d0bd;
+}
+
+.creator-contact:hover,
+.creator-source:hover {
+  transform: translateY(-2px);
+}
+
+@media (max-width: 860px) {
+  .creator-credits {
+    grid-template-columns: auto 1fr;
+    padding: 22px;
+  }
+
+  .creator-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .creator-credits {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+
+  .creator-mark {
+    width: 62px;
+    height: 52px;
+  }
+
+  .creator-mark:before,
+  .creator-mark:after {
+    width: 50px;
+    height: 23px;
+    top: 13px;
+  }
+
+  .creator-mark span {
+    left: 25px;
+    top: 20px;
+  }
+
+  .creator-actions {
+    grid-column: auto;
+    display: grid;
+  }
+
+  .creator-contact,
+  .creator-source {
+    justify-content: center;
+  }
+}
