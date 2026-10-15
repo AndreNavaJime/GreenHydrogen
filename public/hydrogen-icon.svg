@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Hydrogen USA">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B2329"/>
+      <stop offset="1" stop-color="#184955"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#35D0C2"/>
+      <stop offset="1" stop-color="#16A6A0"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="118" fill="url(#bg)"/>
+  <circle cx="256" cy="256" r="142" fill="none" stroke="url(#ring)" stroke-width="18" opacity=".92"/>
+  <ellipse cx="256" cy="256" rx="162" ry="82" fill="none" stroke="#5D74D8" stroke-width="15" transform="rotate(28 256 256)" opacity=".88"/>
+  <ellipse cx="256" cy="256" rx="162" ry="82" fill="none" stroke="#35D0C2" stroke-width="12" transform="rotate(-31 256 256)" opacity=".72"/>
+  <circle cx="388" cy="153" r="24" fill="#E0A33B"/>
+  <circle cx="128" cy="347" r="17" fill="#35D0C2"/>
+  <circle cx="256" cy="256" r="48" fill="#FFF8E9"/>
+  <text x="256" y="270" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="50" font-weight="800" fill="#12343B">H₂</text>
+</svg>

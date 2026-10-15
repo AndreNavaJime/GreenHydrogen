@@ -519,6 +519,22 @@ export default function Home() {
         </main>
       )}
 
+      <nav className="mobile-tabbar" aria-label="Mobile navigation">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            className={activeTab === tab.key ? "mobile-tab active" : "mobile-tab"}
+            onClick={() => {
+              setActiveTab(tab.key);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+          >
+            <span aria-hidden="true">{tab.icon}</span>
+            <small>{tab.key === "explorer" ? "States" : tab.key === "robustness" ? "Robust" : tab.key === "benchmark" ? "DOE" : tab.key === "methods" ? "Data" : "Overview"}</small>
+          </button>
+        ))}
+      </nav>
+
       <footer className="site-footer"><span>U.S. Electrolysis Cost Explorer · revised deterministic v3</span><span>Canonical data only · historical Streamlit/ML outputs excluded</span></footer>
     </div>
   );
