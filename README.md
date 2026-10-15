@@ -1,5 +1,7 @@
 # U.S. Electrolysis Cost Explorer
 
+**Live app:** https://usa-electrolysis-cost-explorer.onrender.com
+
 This repository is transitioning from the historical Streamlit/ML dashboard to a lighter web application aligned with the **revised deterministic v3** scientific analysis.
 
 ## Active revised interface
