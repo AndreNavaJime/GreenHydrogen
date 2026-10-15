@@ -1,28 +1,33 @@
-name: Dependency security audit
+name: Web app CI
 
 on:
   push:
-    branches: ["security-audit"]
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "17 8 * * 1"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  audit:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
-      - run: npm ci
-      - name: Run npm audit
-        run: |
-          npm audit --json > npm-audit.json || true
-          cat npm-audit.json
-      - name: Upload audit report
-        uses: actions/upload-artifact@v4
-        with:
-          name: npm-audit-report
-          path: npm-audit.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Dependency security audit
+        run: npm audit --audit-level=moderate
+
+      - name: Production build
+        run: npm run build
