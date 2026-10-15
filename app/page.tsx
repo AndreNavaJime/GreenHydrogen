@@ -336,6 +336,36 @@ export default function Home() {
               <button className="primary-action warm" onClick={() => setActiveTab("robustness")}>Explore robustness →</button>
             </div>
           </section>
+
+          <section className="creator-credits">
+            <div className="creator-mark" aria-hidden="true"><span /><i /><b /></div>
+            <div className="creator-copy">
+              <div className="eyebrow dark-eyebrow">SCIENTIFIC RESEARCH TOOL</div>
+              <h2>Research, model &amp; application by Andrea Navarro Jiménez</h2>
+              <p>
+                An interactive scientific companion for state-resolved techno-economic screening
+                of U.S. water electrolysis, built from the same versioned canonical outputs used
+                throughout the revised research workflow.
+              </p>
+            </div>
+            <div className="creator-actions">
+              <a
+                className="creator-contact"
+                href="mailto:andrenavarrojime@gmail.com?subject=Hydrogen%20USA%20Scientific%20Tool"
+                aria-label="Contact Andrea Navarro Jiménez by email"
+              >
+                Contact author <span>↗</span>
+              </a>
+              <a
+                className="creator-source"
+                href="https://github.com/AndreNavaJime/GreenHydrogen"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Source repository <span>↗</span>
+              </a>
+            </div>
+          </section>
         </main>
       )}
 
