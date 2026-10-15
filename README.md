@@ -1,147 +1,74 @@
-🧪 Hydrogen LCOH Dashboard
+# U.S. Electrolysis Cost Explorer
 
-Explore U.S. green hydrogen techno-economic analysis (TEA) and machine-learning (ML) projections (2022–2060) across Alkaline, PEM, and SOEC electrolysis.
-Try it live 👉 Launch the Dashboard Online
+This repository is transitioning from the historical Streamlit/ML dashboard to a lighter web application aligned with the **revised deterministic v3** scientific analysis.
 
-⚡ Quick Start
+## Active revised interface
 
-For experienced users:
+The new app is a Next.js interface for the accepted manuscript architecture:
 
-pip install -r requirements.txt
-# or manually:
-pip install streamlit pandas numpy geopandas scikit-learn xgboost lightgbm catboost plotly matplotlib fpdf
-streamlit run USMACHINE.py
+- grid-connected, plant-gate LCOH;
+- 48 contiguous U.S. states;
+- AWE (liquid alkaline), PEM, and O-SOEC;
+- real 2022 USD;
+- 8% real WACC;
+- 20-year project life;
+- 90% utilization;
+- DOE technology assumptions;
+- EIA state electricity and natural-gas price inputs;
+- source-backed ranking robustness rather than probabilistic Monte Carlo;
+- DOE 2024 published-model consistency benchmark.
 
+The revised baseline **does not claim renewable matching, emissions intensity, or green-hydrogen certification**.
 
-Make sure the CSV files (USAALKALINE.csv, USAPEM.csv, USASOEC.csv) exist in the working directory (or update load_data() paths).
+### Run the new app locally
 
-🌐 Or just open it online:
-👉 https://greenhydrogen-xg5o4rotmarima9zughosq.streamlit.app
+```bash
+npm install
+npm run dev
+```
 
-🔧 Full Installation Guide
-1️⃣ Clone the repo
-git clone https://github.com/your-username/greenhydrogen.git
-cd greenhydrogen
+Then open `http://localhost:3000`.
 
-2️⃣ Python version
+## Current web-app data status
 
-Requires Python 3.12
-(see requires-python>=3.12,<3.13 in requirements.txt).
+The revised branch now contains the migrated, hash-verified canonical data release under `public/data/canonical/`:
 
-3️⃣ Create environment
+- 720-row deterministic v3 state/year/technology table;
+- state technology-ordering tables;
+- DOE 2022 installed-CAPEX envelope and break-even outputs;
+- observed 2025 electricity-price sensitivity;
+- observed 2024 natural-gas-price sensitivity;
+- DOE 2024 benchmark comparison;
+- public provenance manifest with SHA-256 hashes and source-relative paths.
 
-Conda (recommended):
+The web app reads these accepted CSVs directly. It includes a full 48-state selector, technology cost decomposition, scenario comparisons, and direct CSV/manifest downloads. Legacy root CSVs are **not** used as substitutes.
 
-conda create -n lcoh python=3.12 -y
-conda activate lcoh
+See `data/README.md` and `public/data/canonical/README.md`.
 
+## Historical Streamlit dashboard
 
-venv:
+`USMACHINE.py` and the root-level historical TEA/ML files are retained for provenance. They belong to the earlier analysis and are **not the active scientific interface for the revised manuscript**.
 
-python3.12 -m venv lcoh
-source lcoh/bin/activate   # Linux/Mac
-lcoh\Scripts\activate      # Windows
+The historical implementation includes Streamlit, ML surrogate models, SHAP, legacy TEA CSVs, rank-flip tables, resource proxies, and other elements that were removed from the revised scientific contribution.
 
-4️⃣ Install dependencies
-pip install -r requirements.txt
+Do not use the historical dashboard outputs as revised-manuscript results.
 
+## Scientific transition
 
-Or install manually (see list inside requirements.txt).
+The revised paper now centers on:
 
-⚠️ Geospatial dependencies (geopandas, fiona, gdal) may fail on Windows/Streamlit Cloud:
+1. a physically consistent deterministic plant-gate TEA;
+2. state-resolved technology ordering;
+3. source-backed DOE CAPEX-envelope robustness;
+4. observed electricity- and natural-gas-price robustness;
+5. published DOE benchmark consistency.
 
-Conda:
+Probabilistic Monte Carlo, ML/SHAP, Cambium, delivered-cost overlays, arbitrary capacity-factor equations, CO₂ surcharges, and land/infrastructure CAPEX multipliers are not part of the active revised analysis.
 
-conda install -c conda-forge geopandas gdal proj shapely fiona
+## Repository branch
 
+The new application is being developed on:
 
-Streamlit Cloud: add packages.txt with:
+`revised-v3-webapp`
 
-gdal-bin
-libgdal-dev
-proj-bin
-
-5️⃣ Generate input data
-
-Run the techno-economic models to produce CSV inputs:
-
-python "ALKALINE USA.py"
-python "PEM USA.py"
-python "SOEC USA.py"
-
-
-This generates:
-
-MACHINE LEARNING/
- ├─ USAALKALINE.csv
- ├─ USAPEM.csv
- └─ USASOEC.csv
-
-6️⃣ Launch dashboard
-streamlit run USMACHINE.py
-
-🖥️ Usage Guide
-
-Once launched, the app opens in your browser (http://localhost:8501 by default).
-Or skip installation and use the live version:
-👉 https://greenhydrogen-xg5o4rotmarima9zughosq.streamlit.app
-
-Sidebar Controls
-
-Prediction Mode: ML Model (regressors + SHAP explanations) or Baseline TEA (deterministic techno-economics).
-
-Technology: Alkaline, PEM, or SOEC.
-
-Year: 2022 → 2060 (decade steps).
-
-State: one of the 48 contiguous U.S. states.
-
-Sliders: adjust CAPEX, efficiency, and electricity price.
-
-Parameter source:
-
-DOE targets → resets to DOE reference values.
-
-Fix inputs across years → keep your adjustments consistent.
-
-Tabs
-
-Prediction → scenario inputs + LCOH results.
-
-Stats → R², RMSE, MAE, and cross-validation metrics (ML mode).
-
-Feature Importance & Trends → SHAP plots and LCOH trend heatmaps.
-
-Map → interactive U.S. choropleths of LCOH.
-
-State Comparison → compare LCOH sensitivity across states.
-
-U.S. Summary → national averages by decade.
-
-Download Center → export results as PDF or ZIP bundles.
-
-Outputs
-
-Interactive Plotly charts (exportable as PNG).
-
-Scenario reports (PDF/ZIP).
-
-SHAP explanations to interpret model predictions.
-
-🌐 Deploy Online Yourself
-
-Push this repo to GitHub.
-
-On Streamlit Cloud
-, create a new app and set entry point to USMACHINE.py.
-
-Ensure you have:
-
-requirements.txt (already included).
-
-packages.txt with system libs.
-
-Deploy → your app is served at a URL like:
-
-https://greenhydrogen-xxxx.streamlit.app
-
+The historical `main` branch remains available for provenance until the revised application is reviewed and merged.
