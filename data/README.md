@@ -1,19 +1,27 @@
 # Revised v3 web-app data
 
-The current web interface is seeded only with values already accepted in the revised manuscript workflow:
+The active web interface uses only values accepted in the revised manuscript workflow.
 
-- deterministic v3 national state-distribution summaries;
-- Step 5A DOE CAPEX-envelope ranking robustness;
-- Step 5A observed-2025 electricity-price result;
-- Step 5B observed-2024 natural-gas-price result;
-- Step 7A DOE consistency benchmark.
+## Canonical browser data
 
-The historical root-level `USAALKALINE.csv`, `USAPEM.csv`, `USASOEC.csv`, rank-flip files, ML outputs and Streamlit data pipeline belong to the rejected/pre-review analysis and are **not** used by the revised web app.
+The migrated source files now live under:
 
-## Next data import
+`public/data/canonical/`
 
-To enable the full 48-state explorer/map, import the accepted canonical files from:
+They include:
 
-`CANONICAL_OUTPUTS/TEA/revised_deterministic_v3/`
+- deterministic v3 state/year/technology results;
+- technology-ordering outputs;
+- DOE 2022 CAPEX-envelope robustness and break-even tables;
+- observed 2025 electricity-price sensitivity;
+- observed 2024 natural-gas-price sensitivity;
+- DOE 2024 consistency benchmark;
+- `MIGRATION_MANIFEST.json` with SHA-256 hashes and source-relative provenance.
 
-and the accepted Step 5A/5B scenario outputs into versioned JSON/CSV under this directory. Do not substitute the legacy root CSVs.
+The state explorer loads the canonical CSVs directly in the browser.
+
+## Legacy data boundary
+
+The historical root-level `USAALKALINE.csv`, `USAPEM.csv`, `USASOEC.csv`, rank-flip files, ML outputs and Streamlit pipeline belong to the rejected/pre-review analysis and are **not** used by the revised web app.
+
+Do not substitute those files for the canonical revised-v3 release.
