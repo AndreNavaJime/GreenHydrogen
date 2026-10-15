@@ -174,3 +174,48 @@ code { color: #d6e5ed; background: rgba(255,255,255,.05); border-radius: 5px; pa
   .winner-banner { align-items: flex-start; flex-direction: column; }
   .mini-grid { grid-template-columns: 1fr; }
 }
+
+
+.map-shell {
+  margin: 18px 0;
+  border: 1px solid var(--line);
+  background: rgba(4,12,22,.28);
+  border-radius: 16px;
+  padding: 16px;
+}
+.us-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 560px;
+}
+.state-shape {
+  stroke: rgba(255,255,255,.45);
+  stroke-width: 1.15;
+  vector-effect: non-scaling-stroke;
+  cursor: pointer;
+  transition: opacity .15s ease, stroke-width .15s ease, filter .15s ease;
+}
+.state-shape:hover,
+.state-shape:focus {
+  opacity: .86;
+  stroke: #ffffff;
+  stroke-width: 2;
+  outline: none;
+  filter: brightness(1.08);
+}
+.state-shape.selected {
+  stroke: #ffffff;
+  stroke-width: 3.2;
+  filter: drop-shadow(0 0 5px rgba(255,255,255,.35));
+}
+.map-legend {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: .8rem;
+}
+.map-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.map-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
