@@ -1,7 +1,7 @@
 {
   "scientific_release": "revised_deterministic_v3",
-  "source_root": "C:\\Users\\Navar\\OneDrive\\Documentos\\USA",
-  "destination": "C:\\Users\\Navar\\OneDrive\\Documentos\\USA\\GreenHydrogen\\public\\data\\canonical",
+  "source_root": "LOCAL_USA_PROJECT_ROOT",
+  "destination": "public/data/canonical",
   "files": {
     "deterministic_state_year.csv": {
       "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3/DETERMINISTIC_STATE_YEAR.csv",
@@ -75,5 +75,6 @@
       "rows": 15,
       "bytes": 8458
     }
-  }
+  },
+  "note": "Absolute local filesystem paths intentionally omitted from the public repository; source_relative_path entries preserve scientific provenance."
 }
