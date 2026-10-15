@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { num, type CsvRow } from "@/lib/csv";
+import { assetUrl, num, type CsvRow } from "@/lib/csv";
 
 type Position = [number, number];
 
@@ -57,7 +57,7 @@ export default function USStateMap({
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/data/us_states_contiguous_48.geojson", { cache: "force-cache" })
+    fetch(assetUrl("/data/us_states_contiguous_48.geojson"), { cache: "force-cache" })
       .then((response) => {
         if (!response.ok) throw new Error("Unable to load the 48-state map.");
         return response.json();
