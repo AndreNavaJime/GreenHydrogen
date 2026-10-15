@@ -55,7 +55,7 @@ export function parseCsv(text: string): CsvRow[] {
 }
 
 export async function fetchCsv(path: string): Promise<CsvRow[]> {
-  const response = await fetch(path, { cache: "force-cache" });
+  const response = await fetch(assetUrl(path), { cache: "force-cache" });
   if (!response.ok) {
     throw new Error(`Failed to load ${path}: ${response.status}`);
   }
@@ -65,4 +65,11 @@ export async function fetchCsv(path: string): Promise<CsvRow[]> {
 export function num(value: string | undefined): number {
   const n = Number(value);
   return Number.isFinite(n) ? n : Number.NaN;
+}
+
+
+export function assetUrl(path: string): string {
+  const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+  const normalized = path.startsWith("/") ? path : "/" + path;
+  return base + normalized;
 }
