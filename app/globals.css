@@ -1638,3 +1638,166 @@ code {
     width: 100%;
   }
 }
+
+
+/* --- Brand polish: lighter, more product-like identity --- */
+.topbar {
+  grid-template-columns: minmax(220px, .8fr) minmax(520px, 2fr);
+}
+
+.tab-nav {
+  justify-content: flex-end;
+}
+
+.brand-mark {
+  width: 46px;
+  height: 38px;
+  flex: 0 0 46px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  animation: brandFloat 5.5s ease-in-out infinite;
+}
+
+.brand-mark:before,
+.brand-mark:after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 9px;
+  width: 38px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #35d0c2;
+  background: transparent;
+}
+
+.brand-mark:before {
+  inset: auto;
+  transform: rotate(-26deg);
+  border-color: #35d0c2;
+}
+
+.brand-mark:after {
+  inset: auto;
+  transform: rotate(27deg);
+  border-color: #6d80e8;
+}
+
+.brand-mark i {
+  width: 7px;
+  height: 7px;
+  right: 5px;
+  top: 4px;
+  background: #e0a33b;
+  box-shadow: 0 0 12px rgba(224,163,59,.58);
+}
+
+.brand-mark b {
+  width: 6px;
+  height: 6px;
+  left: 5px;
+  bottom: 4px;
+  background: #35d0c2;
+  box-shadow: 0 0 11px rgba(53,208,194,.50);
+}
+
+.brand-mark span {
+  display: none;
+}
+
+.install-mark {
+  position: relative;
+  width: 48px;
+  height: 42px;
+  flex: 0 0 48px;
+}
+
+.install-mark:before,
+.install-mark:after,
+.install-mark span,
+.install-mark i,
+.install-mark b {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+}
+
+.install-mark:before,
+.install-mark:after {
+  left: 3px;
+  top: 10px;
+  width: 42px;
+  height: 19px;
+  border: 2px solid #35d0c2;
+}
+
+.install-mark:before { transform: rotate(-27deg); }
+.install-mark:after {
+  transform: rotate(28deg);
+  border-color: #6d80e8;
+}
+
+.install-mark span {
+  width: 10px;
+  height: 10px;
+  left: 19px;
+  top: 16px;
+  background: #fff8e9;
+  box-shadow: 0 0 15px rgba(255,248,233,.28);
+}
+
+.install-mark i {
+  width: 7px;
+  height: 7px;
+  right: 4px;
+  top: 5px;
+  background: #e0a33b;
+}
+
+.install-mark b {
+  width: 6px;
+  height: 6px;
+  left: 4px;
+  bottom: 5px;
+  background: #35d0c2;
+}
+
+.install-icon {
+  display: none;
+}
+
+@keyframes brandFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-2px) rotate(2deg); }
+}
+
+@media (max-width: 1120px) {
+  .topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .tab-nav {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 34px;
+    flex-basis: 42px;
+  }
+
+  .brand-mark:before,
+  .brand-mark:after {
+    width: 34px;
+    height: 16px;
+    top: 8px;
+  }
+}
