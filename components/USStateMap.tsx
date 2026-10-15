@@ -23,12 +23,13 @@ type Props = {
   year: number;
   selectedState: string;
   onSelectState: (state: string) => void;
+  variant?: "light" | "dark";
 };
 
 const fillByTechnology: Record<string, string> = {
-  AWE: "#1bb7a7",
-  PEM: "#6f78e8",
-  "O-SOEC": "#e9894a",
+  AWE: "#16A6A0",
+  PEM: "#5D74D8",
+  "O-SOEC": "#E0A33B",
 };
 
 function mercator([lon, lat]: Position): Position {
@@ -51,6 +52,7 @@ export default function USStateMap({
   year,
   selectedState,
   onSelectState,
+  variant = "dark",
 }: Props) {
   const [geo, setGeo] = useState<GeoCollection | null>(null);
   const [error, setError] = useState("");
@@ -162,7 +164,7 @@ export default function USStateMap({
   if (!mapModel) return <p className="subtle">Loading 48-state map…</p>;
 
   return (
-    <div className="map-shell">
+    <div className={"map-shell map-" + variant}>
       <div className="map-legend">
         <span><i style={{ background: fillByTechnology.AWE }} />AWE</span>
         <span><i style={{ background: fillByTechnology.PEM }} />PEM</span>
