@@ -1,0 +1,7 @@
+# Contiguous-state map provenance
+
+- **Source geometry:** `SHAPEFILE/tl_2022_us_state.shp` with its `.dbf`, `.shx`, `.prj`, and `.cpg` companions; U.S. Census Bureau 2022 TIGER/Line state boundaries. Source CRS: EPSG:4269. SHP SHA-256: `af95aea02168163d2b54039f9bdc57e656dac2cd93512769805c5c4a0da144de`.
+- **Accepted state set:** distinct `State` values in `public/data/canonical/deterministic_state_year.csv` (SHA-256 `be8feae25de7d6aa7753de14941d7d2e9f3d996d2ef94564eb8575d0eaa0cb04`). Features were retained only when shapefile `NAME` matched one of those values exactly.
+- **Geometry processing:** reprojected to EPSG:5070, simplified the full polygon coverage with Shapely 2.1.1 `coverage_simplify(..., tolerance=5000)` using a 5,000-meter tolerance, then reprojected to EPSG:4326 for GeoJSON. This coverage-aware method keeps shared state borders aligned. Features are sorted by `NAME`. Only `NAME` and `STUSPS` properties were retained.
+- **Output:** `public/data/us_states_contiguous_48.geojson`; 48 features, 102,189 bytes, SHA-256 `eb8ea0e499fb5b8e312bc5858eb24dcc75d53ca3be183bd3a7a17f9b32cc0b77`.
+- **Checks:** 48 unique feature names match the canonical 48-state set exactly, with no missing or extra states. Source and simplified polygon collections are valid coverages, and all output geometries are valid. The sum of absolute per-state area changes is approximately 0.061% of the original 48-state area; the simplified union differs from the source union by approximately 0.101% of source area. This file is cartographic only and supplies no TEA input.
