@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { cohorts, doeBenchmarks, robustness, type CohortKey } from "@/data/revisedV3";
-import { fetchCsv, num, type CsvRow } from "@/lib/csv";
+import { assetUrl, fetchCsv, num, type CsvRow } from "@/lib/csv";
 import USStateMap from "@/components/USStateMap";
 
 const techClass: Record<string, string> = {
@@ -349,9 +349,9 @@ export default function Home() {
             </div>
 
             <div className="download-row">
-              <a href="/data/canonical/deterministic_state_year.csv" download>Download deterministic v3 CSV</a>
-              <a href="/data/canonical/state_rank_robustness_2022.csv" download>Download ranking robustness CSV</a>
-              <a href="/data/canonical/MIGRATION_MANIFEST.json" download>Download provenance manifest</a>
+              <a href={assetUrl("/data/canonical/deterministic_state_year.csv")} download>Download deterministic v3 CSV</a>
+              <a href={assetUrl("/data/canonical/state_rank_robustness_2022.csv")} download>Download ranking robustness CSV</a>
+              <a href={assetUrl("/data/canonical/MIGRATION_MANIFEST.json")} download>Download provenance manifest</a>
             </div>
           </>
         )}
