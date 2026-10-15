@@ -221,7 +221,6 @@ export default function Home() {
           ))}
         </nav>
 
-        <div className="nav-status"><span className="status-dot" />revised v3</div>
       </header>
 
       {activeTab === "overview" && (
