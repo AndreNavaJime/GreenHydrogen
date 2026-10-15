@@ -74,8 +74,9 @@ def main() -> None:
 
     manifest = {
         "scientific_release": "revised_deterministic_v3",
-        "source_root": str(usa_root),
-        "destination": str(dest),
+        "source_root": "LOCAL_USA_PROJECT_ROOT",
+        "destination": args.dest.replace("\\\\", "/"),
+        "note": "Absolute local filesystem paths intentionally omitted from public provenance.",
         "files": {},
     }
 
