@@ -1,0 +1,79 @@
+{
+  "scientific_release": "revised_deterministic_v3",
+  "source_root": "C:\\Users\\Navar\\OneDrive\\Documentos\\USA",
+  "destination": "C:\\Users\\Navar\\OneDrive\\Documentos\\USA\\GreenHydrogen\\public\\data\\canonical",
+  "files": {
+    "deterministic_state_year.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3/DETERMINISTIC_STATE_YEAR.csv",
+      "sha256": "be8feae25de7d6aa7753de14941d7d2e9f3d996d2ef94564eb8575d0eaa0cb04",
+      "rows": 720,
+      "bytes": 560625
+    },
+    "national_summary.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3/NATIONAL_SUMMARY.csv",
+      "sha256": "2c4ebc29652cfa2fd7c2d022d7482bd23cb57ed45268d6c9c76db560c53a470e",
+      "rows": 15,
+      "bytes": 2708
+    },
+    "technology_ordering_state_year.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3/TECHNOLOGY_ORDERING_STATE_YEAR.csv",
+      "sha256": "e6403c0a4c9e47305ebe80821a14c3c4085f87dbf6b92c9e9e3e3c69740f160a",
+      "rows": 240,
+      "bytes": 39977
+    },
+    "technology_ordering_summary.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3/TECHNOLOGY_ORDERING_SUMMARY.csv",
+      "sha256": "733576e3393bb4d883321134900f09054726c8886a1b287e37de6884f085d0a4",
+      "rows": 5,
+      "bytes": 227
+    },
+    "state_rank_robustness_2022.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3_scenario_robustness_v1/STATE_RANK_ROBUSTNESS_2022.csv",
+      "sha256": "9fefdecbb605739cc7fcaf228f5d388a3b7aea4b5724287f9e7c4b1679c9ef1b",
+      "rows": 48,
+      "bytes": 12949
+    },
+    "doe_capex_envelope_2022.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3_scenario_robustness_v1/DOE_CAPEX_ENVELOPE_2022.csv",
+      "sha256": "8970c62f0119c0e123fef8c1bd9f2b882a20bb702fb2eb307bd18e9445df3da9",
+      "rows": 384,
+      "bytes": 150796
+    },
+    "pairwise_capex_break_even_2022.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3_scenario_robustness_v1/PAIRWISE_CAPEX_BREAK_EVEN_2022.csv",
+      "sha256": "720cff7e256bafd5b0d718a0f8d2147e9a330992f9ed4018f93875e1aa036d58",
+      "rows": 864,
+      "bytes": 135445
+    },
+    "eia_2025_observed_price_sensitivity.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3_scenario_robustness_v1/EIA_2025_OBSERVED_PRICE_SENSITIVITY.csv",
+      "sha256": "03a8651081945372ba47a167a8605611b9c442fc78102ecc354c087bd8b6b00a",
+      "rows": 720,
+      "bytes": 234375
+    },
+    "scenario_ordering_summary.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3_scenario_robustness_v1/SCENARIO_ORDERING_SUMMARY.csv",
+      "sha256": "dbe9147486a337daef4edd75c5543b776db406462c725f166299eb4a9739023e",
+      "rows": 18,
+      "bytes": 1698
+    },
+    "o_soec_2024_ng_price_sensitivity.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3_observed_ng_2024_v1/O_SOEC_2024_NG_PRICE_SENSITIVITY.csv",
+      "sha256": "4df8cee28ae5ae26d7ba52b82cc9242decc07291b87468aef38a6dcd1bc5929d",
+      "rows": 240,
+      "bytes": 90788
+    },
+    "ng_2024_national_change_summary.csv": {
+      "source_relative_path": "CANONICAL_OUTPUTS/TEA/revised_deterministic_v3_observed_ng_2024_v1/NATIONAL_CHANGE_SUMMARY.csv",
+      "sha256": "c82f786de900db5f8d380a6f81beea8c37fc786eeb3880f3010fd605c9e9f5eb",
+      "rows": 5,
+      "bytes": 2029
+    },
+    "doe_v3_benchmark_comparison.csv": {
+      "source_relative_path": "DATA_AUDITS/STEP7A_DOE_V3_BENCHMARK/DOE_V3_BENCHMARK_COMPARISON.csv",
+      "sha256": "431845e02902706537762d6fe3f09d3de0d3d2c4fee2b57cb0473e6c4813b47a",
+      "rows": 15,
+      "bytes": 8458
+    }
+  }
+}
