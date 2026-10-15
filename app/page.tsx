@@ -5,6 +5,8 @@ import { cohorts, doeBenchmarks, robustness, type CohortKey } from "@/data/revis
 import { assetUrl, fetchCsv, num, type CsvRow } from "@/lib/csv";
 import USStateMap from "@/components/USStateMap";
 
+type TabKey = "overview" | "explorer" | "robustness" | "benchmark" | "methods";
+
 const techClass: Record<string, string> = {
   AWE: "tech-awe",
   PEM: "tech-pem",
@@ -13,6 +15,14 @@ const techClass: Record<string, string> = {
 
 const technologies = ["AWE", "PEM", "O-SOEC"] as const;
 const years = [2022, 2030, 2040, 2050, 2060] as const;
+
+const tabs: { key: TabKey; label: string; icon: string }[] = [
+  { key: "overview", label: "Overview", icon: "◉" },
+  { key: "explorer", label: "State Explorer", icon: "⌖" },
+  { key: "robustness", label: "Robustness", icon: "◇" },
+  { key: "benchmark", label: "Benchmark", icon: "≋" },
+  { key: "methods", label: "Methods & Data", icon: "▦" },
+];
 
 function Money({ value, digits = 3 }: { value: number; digits?: number }) {
   return <>{Number.isFinite(value) ? value.toFixed(digits) : "—"}</>;
@@ -55,7 +65,34 @@ function ComponentBar({ row }: { row: CsvRow }) {
   );
 }
 
+function MedianBand({ cohortKey }: { cohortKey: CohortKey }) {
+  const cohort = cohorts.find((item) => item.key === cohortKey) ?? cohorts[0];
+  const values = cohort.rows.map((row) => row.median);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const spread = Math.max(max - min, 0.001);
+
+  return (
+    <div className="median-band">
+      {cohort.rows.map((row) => {
+        const left = 10 + ((row.median - min) / spread) * 80;
+        return (
+          <div className="median-dot-row" key={row.technology}>
+            <span className={"tech-dot " + techClass[row.technology]} />
+            <span className="median-label">{row.technology}</span>
+            <div className="median-track">
+              <span className={"median-marker " + techClass[row.technology]} style={{ left: left + "%" }} />
+            </div>
+            <strong>{"$"}{row.median.toFixed(3)}</strong>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [cohortKey, setCohortKey] = useState<CohortKey>("2022");
   const [stateName, setStateName] = useState("Rhode Island");
   const [year, setYear] = useState<number>(2022);
@@ -152,302 +189,337 @@ export default function Home() {
     [gasScenario, stateName, year]
   );
 
-  const electricityWinner =
-    selectedElectricityScenario[0]?.Named_scenario_winner ?? "—";
+  const electricityWinner = selectedElectricityScenario[0]?.Named_scenario_winner ?? "—";
   const gasWinner = selectedGasScenario?.Named_scenario_winner ?? "—";
 
+  const moveToExplorer = (state?: string) => {
+    if (state) setStateName(state);
+    setActiveTab("explorer");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
-    <main>
-      <section className="hero">
-        <div className="eyebrow">REVISED DETERMINISTIC V3</div>
-        <h1>U.S. Electrolysis Cost Explorer</h1>
-        <p className="hero-copy">
-          Grid-connected, plant-gate levelized cost of hydrogen across the 48 contiguous U.S. states
-          for liquid alkaline water electrolysis (AWE), PEM, and oxide-ion solid-oxide electrolysis
-          (O-SOEC).
-        </p>
-        <div className="scope-strip">
-          <span>Real 2022 USD</span>
-          <span>8% real WACC</span>
-          <span>20-year project</span>
-          <span>90% utilization</span>
-          <span>Plant-gate only</span>
-        </div>
-      </section>
+    <div className="app-shell">
+      <header className="topbar">
+        <button className="brand" onClick={() => setActiveTab("overview")} aria-label="Go to overview">
+          <span className="brand-mark" aria-hidden="true"><i /><b /></span>
+          <span>
+            <strong>HYDROGEN USA</strong>
+            <small>State-resolved electrolysis cost screening</small>
+          </span>
+        </button>
 
-      <section className="notice">
-        <strong>Scientific boundary:</strong> this is a grid-connected screening baseline. It does not
-        establish renewable matching, emissions intensity, or green-hydrogen certification.
-      </section>
-
-      <section className="panel">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow">DETERMINISTIC RESULTS</div>
-            <h2>Technology cost by screening cohort</h2>
-          </div>
-          <div className="segmented" role="tablist" aria-label="Cohort">
-            {cohorts.map((item) => (
-              <button
-                key={item.key}
-                className={item.key === cohortKey ? "active" : ""}
-                onClick={() => setCohortKey(item.key)}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <p className="subtle">{cohort.subtitle}</p>
-
-        <div className="tech-grid">
-          {cohort.rows.map((row) => (
-            <article className="tech-card" key={row.technology}>
-              <div className="tech-card-top">
-                <span className={"tech-pill " + techClass[row.technology]}>{row.technology}</span>
-                <span className="winner-count">{row.winners}/48 state wins</span>
-              </div>
-              <div className="big-number">
-                $<Money value={row.median} /><span>/kg H₂</span>
-              </div>
-              <div className="metric-row">
-                <span>P10–P90 across states</span>
-                <strong>{"$"}{row.p10.toFixed(3)}–{"$"}{row.p90.toFixed(3)}</strong>
-              </div>
-              <div className="metric-row">
-                <span>Full state range</span>
-                <strong>{"$"}{row.minimum.toFixed(3)}–{"$"}{row.maximum.toFixed(3)}</strong>
-              </div>
-            </article>
+        <nav className="tab-nav" aria-label="Primary navigation">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              className={activeTab === tab.key ? "nav-tab active" : "nav-tab"}
+              onClick={() => setActiveTab(tab.key)}
+            >
+              <span aria-hidden="true">{tab.icon}</span>{tab.label}
+            </button>
           ))}
-        </div>
-        <p className="footnote">
-          P10–P90 values are spatial quantiles across 48 equally weighted states, not uncertainty intervals.
-        </p>
-      </section>
+        </nav>
 
-      <section className="panel">
-        <div className="section-heading">
-          <div>
-            <div className="eyebrow">FULL 48-STATE EXPLORER</div>
-            <h2>Inspect accepted v3 costs and components</h2>
-          </div>
-          <div className="explorer-controls">
-            <label className="state-picker">
-              <span>State</span>
-              <select value={stateName} onChange={(event) => setStateName(event.target.value)}>
-                {(states.length ? states : ["Rhode Island"]).map((state) => (
-                  <option key={state} value={state}>{state}</option>
-                ))}
-              </select>
-            </label>
-            <label className="state-picker">
-              <span>Screening year</span>
-              <select value={year} onChange={(event) => setYear(Number(event.target.value))}>
-                {years.map((value) => (
-                  <option key={value} value={value}>{value}</option>
-                ))}
-              </select>
-            </label>
-          </div>
-        </div>
+        <div className="nav-status"><span className="status-dot" />revised v3</div>
+      </header>
 
-        {loading && <p className="subtle">Loading canonical v3 state data…</p>}
-        {loadError && <p className="error-box">{loadError}</p>}
-
-        {!loading && !loadError && (
-          <>
-            <div className="winner-banner">
-              <span>{stateName} · {year}</span>
-              <strong>Lowest deterministic LCOH: {selectedWinner}</strong>
+      {activeTab === "overview" && (
+        <main className="page-view page-enter">
+          <section className="hero-redesign">
+            <div className="hero-ribbon ribbon-one" />
+            <div className="hero-ribbon ribbon-two" />
+            <div className="hero-copy-block">
+              <div className="eyebrow">U.S. ELECTROLYSIS COST EXPLORER</div>
+              <h1>A cleaner view of hydrogen cost competitiveness across America.</h1>
+              <p>
+                Explore grid-connected, plant-gate LCOH for AWE, PEM, and O-SOEC across the
+                48 contiguous U.S. states using the accepted revised deterministic v3 model.
+              </p>
+              <div className="hero-actions">
+                <button className="primary-action" onClick={() => moveToExplorer()}>
+                  Explore the states <span>→</span>
+                </button>
+                <button className="secondary-action" onClick={() => setActiveTab("methods")}>
+                  Model boundary
+                </button>
+              </div>
             </div>
 
-            <USStateMap
-              rows={baseline}
-              year={year}
-              selectedState={stateName}
-              onSelectState={setStateName}
-            />
-            <div className="tech-grid">
-              {selectedRows.map((row) => (
-                <article className="tech-card explorer-card" key={row.Technology}>
-                  <div className="tech-card-top">
-                    <span className={"tech-pill " + techClass[row.Technology]}>{row.Technology}</span>
-                    <span className="winner-count">
-                      {row.Technology === selectedWinner ? "Lowest cost" : "Comparator"}
-                    </span>
+            <div className="hero-metrics">
+              <article><span className="metric-icon metric-teal">48</span><div><strong>48 states</strong><small>Contiguous U.S. analytical domain</small></div></article>
+              <article><span className="metric-icon metric-blue">3</span><div><strong>3 technologies</strong><small>AWE · PEM · O-SOEC</small></div></article>
+              <article><span className="metric-icon metric-amber">47/48</span><div><strong>AWE wins in 2022</strong><small>Status technology assumptions</small></div></article>
+              <article><span className="metric-icon metric-cobalt">48/48</span><div><strong>O-SOEC wins in 2030</strong><small>Interpolated target cohort</small></div></article>
+            </div>
+          </section>
+
+          <section className="scientific-strip">
+            <strong>Scientific boundary</strong>
+            <span>Grid-connected screening baseline · real 2022 USD · 8% real WACC · 20 years · 90% utilization · plant-gate only</span>
+          </section>
+
+          <section className="overview-grid">
+            <article className="surface-card map-overview-card">
+              <div className="section-heading">
+                <div>
+                  <div className="eyebrow dark-eyebrow">STATE TECHNOLOGY MAP</div>
+                  <h2>Lowest deterministic LCOH</h2>
+                  <p className="light-subtle">Click a state to open its detailed explorer.</p>
+                </div>
+                <label className="light-select">
+                  <span>Screening year</span>
+                  <select value={year} onChange={(event) => setYear(Number(event.target.value))}>
+                    {years.map((value) => <option key={value} value={value}>{value}</option>)}
+                  </select>
+                </label>
+              </div>
+              {loading && <p className="light-subtle">Loading canonical state data…</p>}
+              {loadError && <p className="error-box">{loadError}</p>}
+              {!loading && !loadError && (
+                <USStateMap rows={baseline} year={year} selectedState={stateName} onSelectState={moveToExplorer} variant="light" />
+              )}
+            </article>
+
+            <article className="surface-card cohort-card">
+              <div className="eyebrow dark-eyebrow">NATIONAL COST PROFILE</div>
+              <h2>Median LCOH by screening cohort</h2>
+              <div className="segmented light-segmented" role="tablist" aria-label="Cohort">
+                {cohorts.map((item) => (
+                  <button key={item.key} className={item.key === cohortKey ? "active" : ""} onClick={() => setCohortKey(item.key)}>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+              <p className="light-subtle">{cohort.subtitle}</p>
+              <MedianBand cohortKey={cohortKey} />
+              <div className="overview-winner">
+                <span>Lowest median</span>
+                <strong>{[...cohort.rows].sort((a, b) => a.median - b.median)[0].technology}</strong>
+              </div>
+            </article>
+          </section>
+
+          <section className="technology-showcase">
+            <div className="section-heading">
+              <div>
+                <div className="eyebrow dark-eyebrow">TECHNOLOGY COMPARISON</div>
+                <h2>Three electrolysis pathways, one consistent cost boundary.</h2>
+              </div>
+              <button className="text-action" onClick={() => setActiveTab("benchmark")}>View DOE benchmark →</button>
+            </div>
+
+            <div className="overview-tech-grid">
+              {cohort.rows.map((row) => (
+                <article className={"overview-tech-card " + techClass[row.technology]} key={row.technology}>
+                  <div className="tech-card-header">
+                    <span className={"tech-symbol " + techClass[row.technology]}>{row.technology.slice(0, 1)}</span>
+                    <div><h3>{row.technology}</h3><span>{row.winners}/48 state wins</span></div>
                   </div>
-                  <div className="big-number">
-                    $<Money value={num(row.LCOH_plantgate_usd_kg)} /><span>/kg H₂</span>
-                  </div>
-                  <ComponentBar row={row} />
-                  <div className="mini-grid">
-                    <div><span>Avg. SEC</span><strong><Money value={num(row.SEC_average_system_kWh_kg)} digits={1} /> kWh/kg</strong></div>
-                    <div><span>Installed CAPEX</span><strong>$<Money value={num(row.Installed_CAPEX_2022real_usd_system_kW)} digits={0} />/kW</strong></div>
-                    <div><span>Stack life</span><strong><Money value={num(row.Stack_lifetime_hours_at_commissioning)} digits={0} /> h</strong></div>
-                    <div><span>Electricity</span><strong>{(num(row.Electricity_price_2022real_usd_kWh) * 100).toFixed(2)}¢/kWh</strong></div>
+                  <div className="overview-cost">{"$"}{row.median.toFixed(3)}<small>/kg H₂</small></div>
+                  <div className="overview-range">
+                    <span>P10–P90 across states</span>
+                    <strong>{"$"}{row.p10.toFixed(3)}–{"$"}{row.p90.toFixed(3)}</strong>
                   </div>
                 </article>
               ))}
             </div>
+            <p className="light-footnote">P10–P90 values are spatial quantiles, not uncertainty intervals.</p>
+          </section>
 
-            <div className="scenario-grid">
-              <article className="scenario-card">
-                <div className="eyebrow">DOE CAPEX ENVELOPE · 2022 ONLY</div>
-                {year === 2022 && selectedRobustness ? (
-                  <>
-                    <h3>
-                      {selectedRobustness.Ranking_class === "ROBUST_TO_DOE_CAPEX_RANGE"
-                        ? "Winner remains robust"
-                        : "Winner can reverse"}
-                    </h3>
-                    <p>
-                      Baseline winner: <strong>{selectedRobustness.Deterministic_winner_v3}</strong>.
-                      Named winners across the DOE box: <strong>{selectedRobustness.Distinct_named_scenario_winners}</strong>.
-                    </p>
-                    {selectedRobustness.Reversal_witness_scenario && (
-                      <p className="footnote">Witness: <code>{selectedRobustness.Reversal_witness_scenario}</code></p>
-                    )}
-                  </>
-                ) : (
-                  <p className="subtle">The DOE status-CAPEX envelope is intentionally applied only to the 2022 status cohort.</p>
-                )}
-              </article>
-
-              <article className="scenario-card">
-                <div className="eyebrow">OBSERVED 2025 ELECTRICITY PRICE</div>
-                <h3>Named-scenario winner: {electricityWinner}</h3>
-                <p>
-                  {selectedElectricityScenario[0]?.Winner_changed_from_v3 === "True"
-                    ? "The technology winner changes relative to v3."
-                    : "The technology winner is unchanged relative to v3."}
-                </p>
-                <div className="scenario-list">
-                  {selectedElectricityScenario.map((row) => (
-                    <span key={row.Technology}>
-                      {row.Technology}: $<Money value={num(row.Named_scenario_LCOH_plantgate_usd_kg)} />/kg
-                    </span>
-                  ))}
-                </div>
-              </article>
-
-              <article className="scenario-card">
-                <div className="eyebrow">OBSERVED 2024 NATURAL GAS PRICE</div>
-                <h3>Named-scenario winner: {gasWinner}</h3>
-                {selectedGasScenario ? (
-                  <p>
-                    O-SOEC: $<Money value={num(selectedGasScenario.V3_O_SOEC_LCOH_real2022_USD_kg)} /> → $
-                    <Money value={num(selectedGasScenario.Scenario_O_SOEC_LCOH_real2022_USD_kg)} />/kg
-                    {" "}({num(selectedGasScenario.Delta_O_SOEC_LCOH_real2022_USD_kg) >= 0 ? "+" : ""}
-                    <Money value={num(selectedGasScenario.Delta_O_SOEC_LCOH_real2022_USD_kg)} />/kg).
-                  </p>
-                ) : (
-                  <p className="subtle">No gas-case row found for this state/year.</p>
-                )}
-              </article>
+          <section className="robustness-callout">
+            <div>
+              <div className="eyebrow">SOURCE-BACKED ROBUSTNESS</div>
+              <h2><strong>47/48</strong> status rankings can reverse within the DOE 2022 CAPEX envelope.</h2>
             </div>
-
-            <div className="download-row">
-              <a href={assetUrl("/data/canonical/deterministic_state_year.csv")} download>Download deterministic v3 CSV</a>
-              <a href={assetUrl("/data/canonical/state_rank_robustness_2022.csv")} download>Download ranking robustness CSV</a>
-              <a href={assetUrl("/data/canonical/MIGRATION_MANIFEST.json")} download>Download provenance manifest</a>
+            <div className="callout-copy">
+              <p>Rhode Island is the only state whose O-SOEC winner remains robust across all eight endpoint combinations.</p>
+              <button className="primary-action warm" onClick={() => setActiveTab("robustness")}>Explore robustness →</button>
             </div>
-          </>
-        )}
-      </section>
+          </section>
+        </main>
+      )}
 
-      <section className="panel">
-        <div className="eyebrow">SOURCE-BACKED ROBUSTNESS</div>
-        <h2>How stable are the technology rankings?</h2>
-        <div className="robust-grid">
-          <article className="robust-card">
-            <div className="stat">{robustness.capexEnvelope.reversibleStates}/48</div>
-            <h3>states can reverse within the DOE CAPEX box</h3>
-            <p>{robustness.capexEnvelope.note}</p>
-            <div className="tag">Only {robustness.capexEnvelope.robustState} is robust</div>
-          </article>
-          <article className="robust-card">
-            <div className="stat">{robustness.electricity2025.winnerChanges}</div>
-            <h3>winner change under observed 2025 electricity prices</h3>
-            <p>{robustness.electricity2025.state}: {robustness.electricity2025.change}</p>
-            <div className="tag">Observed-price case, not a forecast</div>
-          </article>
-          <article className="robust-card">
-            <div className="stat">{robustness.gas2024.winnerChanges}</div>
-            <h3>winner changes under observed 2024 gas prices</h3>
-            <p>
-              Rhode Island remains O-SOEC; its AWE−O-SOEC gap narrows from $
-              {robustness.gas2024.rhodeIslandGapBefore.toFixed(4)} to $
-              {robustness.gas2024.rhodeIslandGapAfter.toFixed(4)}/kg.
-            </p>
-            <div className="tag">Gas-only named case</div>
-          </article>
-        </div>
-      </section>
+      {activeTab === "explorer" && (
+        <main className="page-view page-enter">
+          <section className="page-heading">
+            <div>
+              <div className="eyebrow">STATE EXPLORER</div>
+              <h1>Inspect state-level cost structure.</h1>
+              <p>Canonical v3 plant-gate LCOH and component accounting for each technology and screening cohort.</p>
+            </div>
+            <div className="explorer-controls">
+              <label className="dark-select"><span>State</span><select value={stateName} onChange={(event) => setStateName(event.target.value)}>{(states.length ? states : ["Rhode Island"]).map((state) => <option key={state} value={state}>{state}</option>)}</select></label>
+              <label className="dark-select"><span>Screening year</span><select value={year} onChange={(event) => setYear(Number(event.target.value))}>{years.map((value) => <option key={value} value={value}>{value}</option>)}</select></label>
+            </div>
+          </section>
 
-      <section className="panel">
-        <div className="eyebrow">DOE 2024 CONSISTENCY BENCHMARK</div>
-        <h2>Published current-grid comparison</h2>
-        <p className="subtle">
-          DOE values are shown in real-2022 USD for display only. The comparison is not empirical
-          validation: DOE and v3 use different electricity prices, utilization, project life, financing,
-          and other boundaries.
-        </p>
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Technology</th>
-                <th>v3 state median</th>
-                <th>DOE current-grid range</th>
-              </tr>
-            </thead>
-            <tbody>
-              {doeBenchmarks.map((row) => (
-                <tr key={row.technology}>
-                  <td><span className={"tech-pill " + techClass[row.technology]}>{row.technology}</span></td>
-                  <td>{"$"}{row.v3Median.toFixed(3)}/kg</td>
-                  <td>{"$"}{row.doeLow.toFixed(3)}–{"$"}{row.doeHigh.toFixed(3)}/kg</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+          {loading && <p className="dark-subtle">Loading canonical v3 state data…</p>}
+          {loadError && <p className="error-box">{loadError}</p>}
 
-      <section className="panel boundary">
-        <div>
-          <div className="eyebrow">MODEL BOUNDARY</div>
-          <h2>What enters the accepted baseline?</h2>
-        </div>
-        <div className="boundary-grid">
-          <div>
-            <h3>Included</h3>
-            <ul>
-              <li>EIA 2022 state industrial electricity prices</li>
-              <li>DOE technology SEC, installed CAPEX, OPEX, and stack lifetime</li>
-              <li>Discounted stack replacement</li>
-              <li>O-SOEC natural-gas thermal input</li>
-            </ul>
-          </div>
-          <div>
-            <h3>Outside baseline LCOH</h3>
-            <ul>
-              <li>Transport and storage</li>
-              <li>Direct water-price charge</li>
-              <li>CO₂ surcharge</li>
-              <li>Land/infrastructure CAPEX multipliers</li>
-            </ul>
-          </div>
-        </div>
-      </section>
+          {!loading && !loadError && (
+            <>
+              <section className="explorer-layout">
+                <article className="dark-card explorer-map-card">
+                  <div className="card-kicker">INTERACTIVE MAP</div>
+                  <USStateMap rows={baseline} year={year} selectedState={stateName} onSelectState={setStateName} variant="dark" />
+                </article>
 
-      <footer>
-        <strong>Canonical data source:</strong> the interactive state explorer reads the migrated,
-        hash-verified revised-v3 CSVs in <code>public/data/canonical/</code>. The historical
-        Streamlit/ML dashboard remains in the repository for provenance but is not used here.
-      </footer>
-    </main>
+                <aside className="state-insight-card">
+                  <span className="state-year">{stateName} · {year}</span>
+                  <h2>{selectedWinner}</h2>
+                  <p className="state-winner-label">Lowest deterministic plant-gate LCOH</p>
+                  <div className="state-tech-list">
+                    {[...selectedRows].sort((a, b) => num(a.LCOH_plantgate_usd_kg) - num(b.LCOH_plantgate_usd_kg)).map((row, index) => (
+                      <div className="state-tech-row" key={row.Technology}>
+                        <span className={"rank-badge " + techClass[row.Technology]}>{index + 1}</span>
+                        <div><strong>{row.Technology}</strong><span>{"$"}{num(row.LCOH_plantgate_usd_kg).toFixed(3)}/kg H₂</span></div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="state-note"><span>Electricity price</span><strong>{selectedRows[0] ? (num(selectedRows[0].Electricity_price_2022real_usd_kWh) * 100).toFixed(2) : "—"}¢/kWh</strong></div>
+                  <button className="secondary-action full" onClick={() => setActiveTab("robustness")}>Test ranking robustness</button>
+                </aside>
+              </section>
+
+              <section className="technology-detail-grid">
+                {selectedRows.map((row) => (
+                  <article className="detail-card" key={row.Technology}>
+                    <div className="tech-card-top">
+                      <span className={"tech-pill " + techClass[row.Technology]}>{row.Technology}</span>
+                      <span className="winner-count">{row.Technology === selectedWinner ? "Lowest cost" : "Comparator"}</span>
+                    </div>
+                    <div className="big-number dark-number">$<Money value={num(row.LCOH_plantgate_usd_kg)} /><span>/kg H₂</span></div>
+                    <ComponentBar row={row} />
+                    <div className="mini-grid light-mini">
+                      <div><span>Avg. SEC</span><strong><Money value={num(row.SEC_average_system_kWh_kg)} digits={1} /> kWh/kg</strong></div>
+                      <div><span>Installed CAPEX</span><strong>$<Money value={num(row.Installed_CAPEX_2022real_usd_system_kW)} digits={0} />/kW</strong></div>
+                      <div><span>Stack life</span><strong><Money value={num(row.Stack_lifetime_hours_at_commissioning)} digits={0} /> h</strong></div>
+                      <div><span>Electricity</span><strong>{(num(row.Electricity_price_2022real_usd_kWh) * 100).toFixed(2)}¢/kWh</strong></div>
+                    </div>
+                  </article>
+                ))}
+              </section>
+            </>
+          )}
+        </main>
+      )}
+
+      {activeTab === "robustness" && (
+        <main className="page-view page-enter">
+          <section className="page-heading robustness-heading">
+            <div>
+              <div className="eyebrow">ROBUSTNESS</div>
+              <h1>How stable is the technology ranking?</h1>
+              <p>Finite, source-backed scenarios replace the previous arbitrary probabilistic uncertainty treatment.</p>
+            </div>
+            <div className="explorer-controls">
+              <label className="dark-select"><span>State</span><select value={stateName} onChange={(event) => setStateName(event.target.value)}>{(states.length ? states : ["Rhode Island"]).map((state) => <option key={state}>{state}</option>)}</select></label>
+              <label className="dark-select"><span>Screening year</span><select value={year} onChange={(event) => setYear(Number(event.target.value))}>{years.map((value) => <option key={value}>{value}</option>)}</select></label>
+            </div>
+          </section>
+
+          <section className="robustness-hero-grid">
+            <article className="major-stat-card reversible"><span className="major-stat">47/48</span><h2>Status rankings can reverse</h2><p>{robustness.capexEnvelope.note}</p></article>
+            <article className="major-stat-card electricity"><span className="major-stat">1</span><h2>Winner change under observed 2025 electricity prices</h2><p>California 2022: {robustness.electricity2025.change}</p></article>
+            <article className="major-stat-card gas"><span className="major-stat">0</span><h2>Winner changes under observed 2024 gas prices</h2><p>Rhode Island remains O-SOEC; its lead narrows under the named gas case.</p></article>
+          </section>
+
+          <section className="scenario-detail-grid">
+            <article className="surface-card scenario-detail">
+              <div className="eyebrow dark-eyebrow">DOE CAPEX ENVELOPE</div><h2>{stateName}</h2>
+              {year === 2022 && selectedRobustness ? (
+                <>
+                  <div className="scenario-status"><span>Baseline winner</span><strong>{selectedRobustness.Deterministic_winner_v3}</strong></div>
+                  <div className="scenario-status"><span>Classification</span><strong>{selectedRobustness.Ranking_class === "ROBUST_TO_DOE_CAPEX_RANGE" ? "Robust" : "Winner can reverse"}</strong></div>
+                  <div className="scenario-status"><span>Named scenario winners</span><strong>{selectedRobustness.Distinct_named_scenario_winners}</strong></div>
+                  {selectedRobustness.Reversal_witness_scenario && <p className="light-footnote">Witness endpoint: <code>{selectedRobustness.Reversal_witness_scenario}</code></p>}
+                </>
+              ) : <p className="light-subtle">The DOE status-CAPEX envelope is intentionally applied only to the 2022 status cohort.</p>}
+            </article>
+
+            <article className="surface-card scenario-detail">
+              <div className="eyebrow dark-eyebrow">OBSERVED 2025 ELECTRICITY PRICE</div><h2>{electricityWinner}</h2>
+              <p className="light-subtle">Named-scenario winner for {stateName} · {year}</p>
+              <div className="scenario-list light-list">
+                {selectedElectricityScenario.map((row) => <span key={row.Technology}><i className={"tech-dot " + techClass[row.Technology]} />{row.Technology}<strong>$<Money value={num(row.Named_scenario_LCOH_plantgate_usd_kg)} />/kg</strong></span>)}
+              </div>
+            </article>
+
+            <article className="surface-card scenario-detail">
+              <div className="eyebrow dark-eyebrow">OBSERVED 2024 NATURAL GAS PRICE</div><h2>{gasWinner}</h2>
+              {selectedGasScenario ? (
+                <>
+                  <p className="light-subtle">O-SOEC named-scenario adjustment for {stateName} · {year}</p>
+                  <div className="gas-shift"><span>$<Money value={num(selectedGasScenario.V3_O_SOEC_LCOH_real2022_USD_kg)} /></span><b>→</b><span>$<Money value={num(selectedGasScenario.Scenario_O_SOEC_LCOH_real2022_USD_kg)} /></span></div>
+                </>
+              ) : <p className="light-subtle">No gas-case row found for this state/year.</p>}
+            </article>
+          </section>
+        </main>
+      )}
+
+      {activeTab === "benchmark" && (
+        <main className="page-view page-enter">
+          <section className="page-heading">
+            <div>
+              <div className="eyebrow">DOE BENCHMARK</div>
+              <h1>Published-model consistency check.</h1>
+              <p>DOE current-grid values are normalized to real-2022 USD for display. This is a published-model consistency benchmark, not empirical validation.</p>
+            </div>
+          </section>
+
+          <section className="benchmark-grid">
+            {doeBenchmarks.map((row) => {
+              const range = row.doeHigh - row.doeLow;
+              const gap = row.doeLow - row.v3Median;
+              return (
+                <article className={"benchmark-card " + techClass[row.technology]} key={row.technology}>
+                  <div className="tech-card-header"><span className={"tech-symbol " + techClass[row.technology]}>{row.technology.slice(0, 1)}</span><h2>{row.technology}</h2></div>
+                  <div className="benchmark-number">{"$"}{row.v3Median.toFixed(3)}<small>/kg</small></div>
+                  <span className="benchmark-caption">v3 state median</span>
+                  <div className="benchmark-range"><span>DOE current-grid range</span><strong>{"$"}{row.doeLow.toFixed(3)}–{"$"}{row.doeHigh.toFixed(3)}/kg</strong><div className="range-line"><i style={{ width: Math.max(20, Math.min(100, range * 60)) + "%" }} /></div></div>
+                  <p className="light-footnote">v3 median is {"$"}{Math.abs(gap).toFixed(3)}/kg {gap >= 0 ? "below" : "above"} the DOE interval floor.</p>
+                </article>
+              );
+            })}
+          </section>
+
+          <section className="surface-card benchmark-note">
+            <h2>Boundary differences matter.</h2>
+            <p>DOE and v3 use different electricity prices, utilization, project life, financing, and other assumptions. The comparison therefore checks directional consistency, not calibration or empirical validation.</p>
+          </section>
+        </main>
+      )}
+
+      {activeTab === "methods" && (
+        <main className="page-view page-enter">
+          <section className="page-heading">
+            <div>
+              <div className="eyebrow">METHODS & DATA</div>
+              <h1>Transparent boundaries and canonical provenance.</h1>
+              <p>Everything shown in the interface is tied to the accepted revised-v3 outputs.</p>
+            </div>
+          </section>
+
+          <section className="methods-grid">
+            <article className="surface-card method-card"><div className="method-index">01</div><h2>Included in baseline</h2><ul><li>EIA 2022 state industrial electricity prices</li><li>DOE technology SEC, installed CAPEX, OPEX, and stack lifetime</li><li>Discounted stack replacement</li><li>O-SOEC natural-gas thermal input</li></ul></article>
+            <article className="surface-card method-card"><div className="method-index">02</div><h2>Outside baseline LCOH</h2><ul><li>Transport and storage</li><li>Direct water-price charge</li><li>CO₂ surcharge</li><li>Land/infrastructure CAPEX multipliers</li></ul></article>
+            <article className="surface-card method-card"><div className="method-index">03</div><h2>Financial basis</h2><ul><li>Real 2022 USD</li><li>8% real WACC</li><li>20-year project life</li><li>90% utilization</li></ul></article>
+          </section>
+
+          <section className="downloads-panel">
+            <div><div className="eyebrow">CANONICAL DOWNLOADS</div><h2>Reproducible data release</h2></div>
+            <div className="download-grid">
+              <a href={assetUrl("/data/canonical/deterministic_state_year.csv")} download><span>CSV</span><strong>Deterministic v3</strong><small>720 state/year/technology rows</small></a>
+              <a href={assetUrl("/data/canonical/state_rank_robustness_2022.csv")} download><span>CSV</span><strong>Ranking robustness</strong><small>48-state DOE CAPEX envelope</small></a>
+              <a href={assetUrl("/data/canonical/MIGRATION_MANIFEST.json")} download><span>JSON</span><strong>Provenance manifest</strong><small>SHA-256 file verification</small></a>
+            </div>
+          </section>
+        </main>
+      )}
+
+      <footer className="site-footer"><span>U.S. Electrolysis Cost Explorer · revised deterministic v3</span><span>Canonical data only · historical Streamlit/ML outputs excluded</span></footer>
+    </div>
   );
 }
