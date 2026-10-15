@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { cohorts, doeBenchmarks, robustness, type CohortKey } from "@/data/revisedV3";
+import { stateRobustness2022 } from "@/data/stateRobustness2022";
 
 const techClass: Record<string, string> = {
   AWE: "tech-awe",
@@ -15,9 +16,14 @@ function Money({ value }: { value: number }) {
 
 export default function Home() {
   const [cohortKey, setCohortKey] = useState<CohortKey>("2022");
+  const [stateName, setStateName] = useState("Rhode Island");
   const cohort = useMemo(
     () => cohorts.find((item) => item.key === cohortKey) ?? cohorts[0],
     [cohortKey]
+  );
+  const stateRow = useMemo(
+    () => stateRobustness2022.find((item) => item.state === stateName) ?? stateRobustness2022[0],
+    [stateName]
   );
 
   return (
@@ -118,6 +124,42 @@ export default function Home() {
             <div className="tag">Gas-only named case</div>
           </article>
         </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-heading">
+          <div>
+            <div className="eyebrow">2022 STATE ROBUSTNESS EXPLORER</div>
+            <h2>Inspect the DOE CAPEX-envelope classification</h2>
+          </div>
+          <label className="state-picker">
+            <span>State</span>
+            <select value={stateName} onChange={(event) => setStateName(event.target.value)}>
+              {stateRobustness2022.map((item) => (
+                <option key={item.state} value={item.state}>{item.state}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="state-detail-grid">
+          <article className="state-detail">
+            <span className="state-label">v3 deterministic winner</span>
+            <strong>{stateRow.baselineWinner}</strong>
+          </article>
+          <article className="state-detail">
+            <span className="state-label">DOE CAPEX-envelope status</span>
+            <strong>{stateRow.classification === "ROBUST_TO_DOE_CAPEX_RANGE" ? "Robust" : "Winner can reverse"}</strong>
+          </article>
+          <article className="state-detail">
+            <span className="state-label">Possible winners across the box</span>
+            <strong>{stateRow.possibleWinners.join(" · ")}</strong>
+          </article>
+        </div>
+        {stateRow.witness ? (
+          <p className="footnote">Example endpoint combination producing a different ordering: <code>{stateRow.witness}</code>.</p>
+        ) : (
+          <p className="footnote">Rhode Island is the only state whose O-SOEC winner remains unchanged across all eight DOE endpoint combinations.</p>
+        )}
       </section>
 
       <section className="panel">
