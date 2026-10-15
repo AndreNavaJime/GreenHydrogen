@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { cohorts, doeBenchmarks, robustness, type CohortKey } from "@/data/revisedV3";
 import { fetchCsv, num, type CsvRow } from "@/lib/csv";
+import USStateMap from "@/components/USStateMap";
 
 const techClass: Record<string, string> = {
   AWE: "tech-awe",
@@ -261,6 +262,13 @@ export default function Home() {
               <span>{stateName} · {year}</span>
               <strong>Lowest deterministic LCOH: {selectedWinner}</strong>
             </div>
+
+            <USStateMap
+              rows={baseline}
+              year={year}
+              selectedState={stateName}
+              onSelectState={setStateName}
+            />
             <div className="tech-grid">
               {selectedRows.map((row) => (
                 <article className="tech-card explorer-card" key={row.Technology}>
